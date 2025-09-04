@@ -4,10 +4,11 @@
     "data_directory": "results/data/",
     "reports_directory": "results/reports/",
     "models_directory": "results/models/",
-    "timestamp": "2025-09-04T23:21:04.072821",
+    "timestamp": "2025-09-05T00:05:52.937136",
     "files_in_figures": [
         "correlation_heatmap.png",
         "distribution_analysis.png",
+        "enhanced_correlation_analysis.png",
         "fixed_effects.png",
         "individual_trajectories.png",
         "model_comparison.png",
@@ -16,8 +17,12 @@
         "scatter_relationships.png"
     ],
     "files_in_data": [
+        "bmi_group_correlations.json",
         "correlation_matrix.csv",
+        "correlation_pvalues.csv",
+        "enhanced_correlation_matrix.csv",
         "model_predictions.csv",
+        "nonlinear_correlations.json",
         "processed_data.csv",
         "summary_statistics.json"
     ],

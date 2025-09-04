@@ -82,6 +82,51 @@ class NIPTResultsManager:
         print(f"相关性矩阵已保存: {filepath}")
         return filepath
     
+    def save_enhanced_correlation_results(self, correlation_matrix: pd.DataFrame,
+                                        correlation_pvalues: pd.DataFrame,
+                                        bmi_group_correlations: dict,
+                                        nonlinear_correlations: dict):
+        """保存增强的相关性分析结果"""
+        
+        # 保存相关性矩阵
+        corr_filepath = os.path.join(self.data_dir, "enhanced_correlation_matrix.csv")
+        correlation_matrix.to_csv(corr_filepath, encoding='utf-8')
+        
+        # 保存p值矩阵
+        pval_filepath = os.path.join(self.data_dir, "correlation_pvalues.csv")
+        correlation_pvalues.to_csv(pval_filepath, encoding='utf-8')
+        
+        # 保存分组分析结果
+        group_filepath = os.path.join(self.data_dir, "bmi_group_correlations.json")
+        with open(group_filepath, 'w', encoding='utf-8') as f:
+            json.dump(bmi_group_correlations, f, indent=4, ensure_ascii=False)
+        
+        # 保存非线性分析结果
+        nonlinear_filepath = os.path.join(self.data_dir, "nonlinear_correlations.json")
+        def convert_numpy_types(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, (np.integer, np.int64)):
+                return int(obj)
+            elif isinstance(obj, (np.floating, np.float64)):
+                return float(obj)
+            elif isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            else:
+                return obj
+        
+        nonlinear_clean = convert_numpy_types(nonlinear_correlations)
+        with open(nonlinear_filepath, 'w', encoding='utf-8') as f:
+            json.dump(nonlinear_clean, f, indent=4, ensure_ascii=False)
+        
+        print(f"增强相关性分析结果已保存:")
+        print(f"  相关性矩阵: {corr_filepath}")
+        print(f"  p值矩阵: {pval_filepath}")
+        print(f"  BMI分组结果: {group_filepath}")
+        print(f"  非线性分析: {nonlinear_filepath}")
+    
     def save_model_results(self, model_results: Dict, filename: str = "model_results.json"):
         """保存模型结果"""
         filepath = os.path.join(self.models_dir, filename)

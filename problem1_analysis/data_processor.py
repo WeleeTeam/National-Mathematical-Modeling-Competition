@@ -113,8 +113,19 @@ class NIPTDataProcessor:
         cleaned_data['days_since_first'] = cleaned_data.groupby('孕妇代码')['gestational_days'].transform(
             lambda x: x - x.min()
         )
-
-        # 7. 将计数类变量标准化为数值型（新增 *_num 列）
+        
+        # 7. 处理IVF妊娠方式为数值（1=IVF, 0=自然受孕）
+        if 'IVF妊娠' in cleaned_data.columns:
+            cleaned_data['IVF_indicator'] = cleaned_data['IVF妊娠'].apply(
+                lambda x: 1 if str(x).strip().lower() in ['ivf', '试管婴儿', '人工受孕'] else 0
+            )
+        
+        # 8. 创建BMI分组指标（按照题目提示的分组）
+        cleaned_data['BMI_group'] = pd.cut(cleaned_data['孕妇BMI'], 
+                                         bins=[0, 28, 32, 36, 40, float('inf')],
+                                         labels=['<28', '28-32', '32-36', '36-40', '≥40'])
+        
+        # 9. 将计数类变量标准化为数值型（新增 *_num 列）
         for col in ['怀孕次数', '生产次数', '检测抽血次数']:
             if col in cleaned_data.columns:
                 cleaned_data[f'{col}_num'] = cleaned_data[col].apply(_parse_count_value)
@@ -128,12 +139,21 @@ class NIPTDataProcessor:
     def prepare_longitudinal_format(self, cleaned_data: pd.DataFrame) -> pd.DataFrame:
         """准备纵向数据格式"""
         
-        # 选择相关变量
+        # 选择相关变量（扩展到包含所有重要指标）
         longitudinal_vars = [
             '序号', '孕妇代码', 'gestational_days', 'Y染色体浓度', 
             '孕妇BMI', '年龄', '身高', '体重', '检测抽血次数',
             'BMI_centered', 'age_centered', 'log_y_concentration',
             '达标标识', 'days_since_first', '怀孕次数', '生产次数',
+            # Z值相关变量
+            'Y染色体的Z值', 'X染色体的Z值', '13号染色体的Z值', '18号染色体的Z值', '21号染色体的Z值',
+            # GC含量相关变量  
+            'GC含量', '13号染色体的GC含量', '18号染色体的GC含量', '21号染色体的GC含量',
+            # 测序质量指标
+            '原始读段数', '在参考基因组上比对的比例', '重复读段的比例', '唯一比对的读段数  ',
+            '被过滤掉读段数的比例', 'X染色体浓度',
+            # 临床因素
+            'IVF_indicator', 'BMI_group',
             # 数值标准化后的计数列（如果存在）
             '怀孕次数_num', '生产次数_num', '检测抽血次数_num'
         ]

@@ -407,6 +407,144 @@ class NIPTVisualizer:
             print(f"模型比较图已保存: {save_path}")
         
         plt.close()  # 关闭图形以释放内存
+    
+    def plot_enhanced_correlation_analysis(self, data: pd.DataFrame, 
+                                         correlation_matrix: pd.DataFrame,
+                                         correlation_pvalues: pd.DataFrame,
+                                         bmi_group_correlations: dict,
+                                         save_path: str = None):
+        """绘制增强版相关性分析图表"""
+        
+        fig = plt.figure(figsize=(20, 16))
+        
+        # 1. 整体相关性热力图 (左上)
+        plt.subplot(2, 3, 1)
+        # 选择与Y染色体浓度相关的主要变量
+        main_vars = ['Y染色体浓度', 'gestational_days', '孕妇BMI', '年龄', '身高', '体重']
+        if 'Y染色体的Z值' in correlation_matrix.index:
+            main_vars.append('Y染色体的Z值')
+        
+        available_vars = [v for v in main_vars if v in correlation_matrix.index]
+        main_corr = correlation_matrix.loc[available_vars, available_vars]
+        mask = np.triu(np.ones_like(main_corr, dtype=bool))
+        sns.heatmap(main_corr, mask=mask, annot=True, cmap='coolwarm',
+                   center=0, square=True, fmt='.3f', cbar_kws={"shrink": .8})
+        plt.title('主要变量相关性矩阵', fontsize=12, fontweight='bold')
+        
+        # 2. Y染色体浓度相关性条形图 (右上)
+        plt.subplot(2, 3, 2)
+        y_correlations = correlation_matrix['Y染色体浓度'].drop('Y染色体浓度').dropna()
+        
+        if 'Y染色体浓度' in correlation_pvalues.index:
+            y_pvalues = correlation_pvalues['Y染色体浓度'].loc[y_correlations.index]
+        else:
+            y_pvalues = pd.Series([np.nan]*len(y_correlations), index=y_correlations.index)
+        
+        # 根据显著性设置颜色
+        colors = []
+        for p in y_pvalues:
+            if pd.isna(p):
+                colors.append('gray')
+            elif p < 0.001:
+                colors.append('red')
+            elif p < 0.01:
+                colors.append('orange')
+            elif p < 0.05:
+                colors.append('yellow')
+            else:
+                colors.append('lightgray')
+        
+        bars = plt.barh(range(len(y_correlations)), y_correlations.values, color=colors)
+        plt.yticks(range(len(y_correlations)), y_correlations.index, rotation=0)
+        plt.xlabel('相关系数 r')
+        plt.title('Y染色体浓度相关性（按显著性着色）', fontsize=12)
+        plt.axvline(x=0, color='black', linestyle='-', alpha=0.3)
+        plt.grid(True, alpha=0.3)
+        
+        # 3. BMI分组相关性比较 (左下)
+        plt.subplot(2, 3, 4)
+        if bmi_group_correlations:
+            groups = list(bmi_group_correlations.keys())
+            gest_corrs = [bmi_group_correlations[g].get('gestational_days', 0) for g in groups]
+            
+            plt.bar(groups, gest_corrs, alpha=0.7, color='skyblue')
+            plt.xlabel('BMI组别')
+            plt.ylabel('Y浓度-孕周相关性 r')
+            plt.title('不同BMI组的相关性差异', fontsize=12)
+            plt.xticks(rotation=45)
+            plt.grid(True, alpha=0.3)
+        
+        # 4. Y染色体浓度 vs 孕周散点图 (中下)
+        plt.subplot(2, 3, 5)
+        scatter = plt.scatter(data['gestational_days'], data['Y染色体浓度'], 
+                            c=data['孕妇BMI'], cmap='viridis', alpha=0.6)
+        plt.colorbar(scatter, label='BMI')
+        plt.axhline(y=0.04, color='red', linestyle='--', linewidth=2, label='达标阈值(4%)')
+        plt.xlabel('孕周(天数)')
+        plt.ylabel('Y染色体浓度')
+        plt.title('Y浓度 vs 孕周数（按BMI着色）', fontsize=12)
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        
+        # 5. 非线性趋势分析 (右下)
+        plt.subplot(2, 3, 6)
+        # 拟合多项式回归线
+        x = data['gestational_days'].dropna()
+        y_all = data['Y染色体浓度']
+        
+        # 找到两个变量都非缺失的索引
+        common_idx = x.index.intersection(y_all.dropna().index)
+        x_clean = x.loc[common_idx]
+        y_clean = y_all.loc[common_idx]
+        
+        if len(x_clean) > 20:
+            # 线性拟合
+            z_linear = np.polyfit(x_clean, y_clean, 1)
+            p_linear = np.poly1d(z_linear)
+            
+            # 二次拟合
+            try:
+                z_quad = np.polyfit(x_clean, y_clean, 2)  
+                p_quad = np.poly1d(z_quad)
+                has_quad = True
+            except:
+                has_quad = False
+            
+            x_smooth = np.linspace(x_clean.min(), x_clean.max(), 100)
+            
+            plt.scatter(x_clean, y_clean, alpha=0.5, color='lightblue', s=20)
+            plt.plot(x_smooth, p_linear(x_smooth), 'r--', linewidth=2, label='线性拟合')
+            
+            if has_quad:
+                plt.plot(x_smooth, p_quad(x_smooth), 'g-', linewidth=2, label='二次拟合')
+            
+            plt.axhline(y=0.04, color='red', linestyle=':', alpha=0.7, label='达标线')
+            
+            plt.xlabel('孕周(天数)')
+            plt.ylabel('Y染色体浓度')
+            plt.title('线性 vs 非线性关系', fontsize=12)
+            plt.legend()
+            plt.grid(True, alpha=0.3)
+        
+        # 6. 显著性水平图例 (中上)
+        plt.subplot(2, 3, 3)
+        plt.axis('off')
+        legend_elements = [
+            plt.Rectangle((0, 0), 1, 1, color='red', label='p < 0.001 (***)'),
+            plt.Rectangle((0, 0), 1, 1, color='orange', label='p < 0.01 (**)'),
+            plt.Rectangle((0, 0), 1, 1, color='yellow', label='p < 0.05 (*)'),
+            plt.Rectangle((0, 0), 1, 1, color='lightgray', label='p ≥ 0.05 (ns)')
+        ]
+        plt.legend(handles=legend_elements, loc='center', fontsize=14)
+        plt.title('显著性水平说明', fontsize=14, fontweight='bold')
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"增强相关性分析图已保存: {save_path}")
+        
+        plt.close()  # 关闭图形以释放内存
 
 
 if __name__ == "__main__":

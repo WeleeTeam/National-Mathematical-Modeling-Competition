@@ -127,39 +127,67 @@ class Problem1Analysis:
         print("探索性数据分析完成，图表已保存")
     
     def correlation_analysis(self):
-        """相关性分析"""
+        """相关性分析（增强版）"""
         
-        # 计算相关性矩阵
-        numeric_vars = ['Y染色体浓度', 'gestational_days', '孕妇BMI', '年龄', 
-                       '身高', '体重']
-        # 使用数值化后的计数列（若存在）
-        for optional_col in ['怀孕次数_num', '生产次数_num', '检测抽血次数_num']:
-            if optional_col in self.processed_data.columns:
-                numeric_vars.append(optional_col)
+        # 1. 全面的变量选择
+        # 核心变量
+        core_vars = ['Y染色体浓度', 'gestational_days', '孕妇BMI', '年龄', '身高', '体重']
         
-        # 强制转换为数值，无法转换设为NaN
-        corr_input = self.processed_data[numeric_vars].apply(pd.to_numeric, errors='coerce')
+        # Z值变量（重要的标准化指标）
+        z_score_vars = []
+        for col in ['Y染色体的Z值', 'X染色体的Z值', '13号染色体的Z值', '18号染色体的Z值', '21号染色体的Z值']:
+            if col in self.processed_data.columns:
+                z_score_vars.append(col)
+        
+        # GC含量变量（测序质量指标）
+        gc_vars = []
+        for col in ['GC含量', '13号染色体的GC含量', '18号染色体的GC含量', '21号染色体的GC含量']:
+            if col in self.processed_data.columns:
+                gc_vars.append(col)
+        
+        # 测序质量指标
+        seq_quality_vars = []
+        for col in ['原始读段数', '在参考基因组上比对的比例', '重复读段的比例', '唯一比对的读段数  ', '被过滤掉读段数的比例', 'X染色体浓度']:
+            if col in self.processed_data.columns:
+                seq_quality_vars.append(col)
+        
+        # 临床因素
+        clinical_vars = []
+        for col in ['IVF_indicator', '怀孕次数_num', '生产次数_num', '检测抽血次数_num']:
+            if col in self.processed_data.columns:
+                clinical_vars.append(col)
+        
+        # 综合所有变量
+        all_numeric_vars = core_vars + z_score_vars + gc_vars + seq_quality_vars + clinical_vars
+        
+        # 2. 计算全面相关性矩阵
+        corr_input = self.processed_data[all_numeric_vars].apply(pd.to_numeric, errors='coerce')
         correlation_matrix = corr_input.corr()
         self.analysis_results['correlation_matrix'] = correlation_matrix
         
-        # 绘制相关性热力图
-        self.visualizer.plot_correlation_heatmap(
+        # 3. 计算相关性的显著性检验
+        correlation_pvalues = self._calculate_correlation_pvalues(corr_input)
+        self.analysis_results['correlation_pvalues'] = correlation_pvalues
+        
+        # 4. 按BMI分组进行相关性分析
+        bmi_group_correlations = self._analyze_bmi_group_correlations(corr_input)
+        self.analysis_results['bmi_group_correlations'] = bmi_group_correlations
+        
+        # 5. 非线性相关性分析
+        nonlinear_correlations = self._analyze_nonlinear_correlations(corr_input)
+        self.analysis_results['nonlinear_correlations'] = nonlinear_correlations
+        
+        # 6. 绘制增强版相关性图表
+        self.visualizer.plot_enhanced_correlation_analysis(
             self.processed_data,
-            save_path=self.results_manager.get_figure_path("correlation_heatmap.png")
+            correlation_matrix,
+            correlation_pvalues,
+            bmi_group_correlations,
+            save_path=self.results_manager.get_figure_path("enhanced_correlation_analysis.png")
         )
         
-        print("相关性分析完成")
-        print("主要相关系数：")
-        def safe_corr(a, b):
-            try:
-                val = correlation_matrix.loc[a, b]
-                return f"{val:.3f}" if pd.notna(val) else "NA"
-            except Exception:
-                return "NA"
-
-        print(f"Y浓度 vs 孕周数: {safe_corr('Y染色体浓度','gestational_days')}")
-        print(f"Y浓度 vs BMI: {safe_corr('Y染色体浓度','孕妇BMI')}")
-        print(f"Y浓度 vs 年龄: {safe_corr('Y染色体浓度','年龄')}")
+        # 7. 显示结果
+        self._display_correlation_results(correlation_matrix, correlation_pvalues)
     
     def fit_mixed_effects_models(self):
         """拟合多个混合效应模型"""
@@ -305,6 +333,15 @@ class Problem1Analysis:
                 self.analysis_results['correlation_matrix']
             )
         
+        # 保存增强的相关性分析结果
+        if all(key in self.analysis_results for key in ['correlation_matrix', 'correlation_pvalues', 'bmi_group_correlations', 'nonlinear_correlations']):
+            self.results_manager.save_enhanced_correlation_results(
+                self.analysis_results['correlation_matrix'],
+                self.analysis_results['correlation_pvalues'],
+                self.analysis_results['bmi_group_correlations'],
+                self.analysis_results['nonlinear_correlations']
+            )
+        
         # 保存模型结果
         self.results_manager.save_model_results(
             self.model_analyzer.results
@@ -380,6 +417,169 @@ class Problem1Analysis:
                     findings.append(f"{row['Variable']}对Y染色体浓度有显著{effect_direction}影响 (p={row['p_value']:.4f})")
         
         return findings
+    
+    def _calculate_correlation_pvalues(self, data: pd.DataFrame) -> pd.DataFrame:
+        """计算相关性的p值"""
+        from scipy.stats import pearsonr
+        
+        variables = data.columns.tolist()
+        n_vars = len(variables)
+        
+        # 创建p值矩阵
+        pvalue_matrix = np.ones((n_vars, n_vars))
+        
+        for i in range(n_vars):
+            for j in range(i+1, n_vars):
+                try:
+                    # 移除缺失值对
+                    var1 = data.iloc[:, i].dropna()
+                    var2 = data.iloc[:, j].dropna()
+                    
+                    # 找到两个变量都非缺失的索引
+                    common_idx = var1.index.intersection(var2.index)
+                    if len(common_idx) > 10:  # 至少需要10个观测点
+                        _, p_val = pearsonr(var1.loc[common_idx], var2.loc[common_idx])
+                        pvalue_matrix[i, j] = p_val
+                        pvalue_matrix[j, i] = p_val
+                except:
+                    pvalue_matrix[i, j] = np.nan
+                    pvalue_matrix[j, i] = np.nan
+        
+        # 转换为DataFrame
+        pvalue_df = pd.DataFrame(pvalue_matrix, index=variables, columns=variables)
+        return pvalue_df
+    
+    def _analyze_bmi_group_correlations(self, data: pd.DataFrame) -> dict:
+        """按BMI分组分析相关性"""
+        
+        group_correlations = {}
+        
+        if 'BMI_group' in self.processed_data.columns:
+            for group in self.processed_data['BMI_group'].unique():
+                if pd.notna(group):
+                    group_data = self.processed_data[self.processed_data['BMI_group'] == group]
+                    
+                    if len(group_data) > 10:  # 确保样本量足够
+                        # 选择核心变量进行分组分析
+                        core_vars = ['Y染色体浓度', 'gestational_days', '孕妇BMI', '年龄']
+                        # 添加Z值变量（如果存在）
+                        if 'Y染色体的Z值' in group_data.columns:
+                            core_vars.append('Y染色体的Z值')
+                        
+                        group_corr_input = group_data[core_vars].apply(pd.to_numeric, errors='coerce')
+                        group_corr = group_corr_input.corr()
+                        
+                        # 重点关注Y染色体浓度的相关性
+                        y_correlations = group_corr['Y染色体浓度'].drop('Y染色体浓度')
+                        group_correlations[str(group)] = y_correlations.to_dict()
+        
+        return group_correlations
+    
+    def _analyze_nonlinear_correlations(self, data: pd.DataFrame) -> dict:
+        """分析非线性相关性"""
+        
+        nonlinear_results = {}
+        
+        # 对于关键变量，创建多项式特征并分析相关性
+        if 'gestational_days' in data.columns and 'Y染色体浓度' in data.columns:
+            # 二次项
+            gest_squared = data['gestational_days'] ** 2
+            gest_squared.name = 'gestational_days_squared'
+            
+            # 三次项
+            gest_cubed = data['gestational_days'] ** 3
+            gest_cubed.name = 'gestational_days_cubed'
+            
+            # 计算与Y染色体浓度的相关性
+            y_conc = data['Y染色体浓度']
+            
+            try:
+                from scipy.stats import pearsonr, spearmanr
+                
+                # 线性相关性
+                linear_corr, linear_p = pearsonr(data['gestational_days'].dropna(), 
+                                               y_conc.dropna())
+                
+                # Spearman相关性（非参数，能捕获单调非线性关系）
+                spear_corr, spear_p = spearmanr(data['gestational_days'].dropna(), 
+                                              y_conc.dropna())
+                
+                nonlinear_results['gestational_days'] = {
+                    'linear_corr': linear_corr,
+                    'linear_p': linear_p,
+                    'spearman_corr': spear_corr,
+                    'spearman_p': spear_p
+                }
+                
+                # BMI的非线性分析
+                if '孕妇BMI' in data.columns:
+                    bmi_linear_corr, bmi_linear_p = pearsonr(data['孕妇BMI'].dropna(), 
+                                                           y_conc.dropna())
+                    bmi_spear_corr, bmi_spear_p = spearmanr(data['孕妇BMI'].dropna(), 
+                                                          y_conc.dropna())
+                    
+                    nonlinear_results['孕妇BMI'] = {
+                        'linear_corr': bmi_linear_corr,
+                        'linear_p': bmi_linear_p,
+                        'spearman_corr': bmi_spear_corr,
+                        'spearman_p': bmi_spear_p
+                    }
+                
+            except Exception as e:
+                print(f"非线性相关性分析出错: {str(e)}")
+        
+        return nonlinear_results
+    
+    def _display_correlation_results(self, correlation_matrix: pd.DataFrame, 
+                                   correlation_pvalues: pd.DataFrame):
+        """显示相关性分析结果"""
+        
+        print("="*60)
+        print("详细相关性分析结果")
+        print("="*60)
+        
+        # 核心相关性结果
+        print("\\n1. Y染色体浓度与主要指标的相关性：")
+        key_vars = ['gestational_days', '孕妇BMI', '年龄', '身高', '体重']
+        
+        for var in key_vars:
+            if var in correlation_matrix.index and 'Y染色体浓度' in correlation_matrix.columns:
+                try:
+                    corr_val = correlation_matrix.loc['Y染色体浓度', var]
+                    p_val = correlation_pvalues.loc['Y染色体浓度', var] if 'Y染色体浓度' in correlation_pvalues.index else np.nan
+                    
+                    if pd.notna(corr_val):
+                        significance = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else "ns"
+                        direction = "正相关" if corr_val > 0 else "负相关"
+                        strength = "强" if abs(corr_val) > 0.7 else "中等" if abs(corr_val) > 0.3 else "弱"
+                        
+                        print(f"  {var}: r={corr_val:.4f}, p={p_val:.4f} ({strength}{direction}, {significance})")
+                except:
+                    print(f"  {var}: 无法计算")
+        
+        # Z值相关性
+        if 'Y染色体的Z值' in correlation_matrix.index:
+            print("\n2. Y染色体相关Z值分析：")
+            z_corr = correlation_matrix.loc['Y染色体浓度', 'Y染色体的Z值']
+            z_p = correlation_pvalues.loc['Y染色体浓度', 'Y染色体的Z值'] if 'Y染色体浓度' in correlation_pvalues.index else np.nan
+            print(f"  Y染色体浓度 vs Y染色体Z值: r={z_corr:.4f}, p={z_p:.4f}")
+        
+        # BMI分组结果
+        if 'bmi_group_correlations' in self.analysis_results:
+            print("\n3. BMI分组相关性差异：")
+            for group, correlations in self.analysis_results['bmi_group_correlations'].items():
+                if 'gestational_days' in correlations:
+                    print(f"  BMI {group}组: Y浓度-孕周相关性 r={correlations['gestational_days']:.4f}")
+        
+        # 非线性结果
+        if 'nonlinear_correlations' in self.analysis_results:
+            print("\n4. 非线性相关性分析：")
+            for var, results in self.analysis_results['nonlinear_correlations'].items():
+                linear_r = results.get('linear_corr', np.nan)
+                spear_r = results.get('spearman_corr', np.nan)
+                print(f"  {var}: Pearson r={linear_r:.4f}, Spearman ρ={spear_r:.4f}")
+                if abs(spear_r - linear_r) > 0.1:
+                    print(f"    → 检测到非线性特征（Spearman与Pearson差异>{0.1:.1f}）")
 
 
 def main():
