@@ -1,0 +1,32 @@
+{
+    "results_directory": "results/",
+    "figures_directory": "results/figures/",
+    "data_directory": "results/data/",
+    "reports_directory": "results/reports/",
+    "models_directory": "results/models/",
+    "timestamp": "2025-09-04T23:21:04.072821",
+    "files_in_figures": [
+        "correlation_heatmap.png",
+        "distribution_analysis.png",
+        "fixed_effects.png",
+        "individual_trajectories.png",
+        "model_comparison.png",
+        "model_diagnostics.png",
+        "predicted_vs_observed.png",
+        "scatter_relationships.png"
+    ],
+    "files_in_data": [
+        "correlation_matrix.csv",
+        "model_predictions.csv",
+        "processed_data.csv",
+        "summary_statistics.json"
+    ],
+    "files_in_reports": [
+        "analysis_report.md"
+    ],
+    "files_in_models": [
+        "fixed_effects_results.csv",
+        "model_comparison.csv",
+        "model_results.json"
+    ]
+}
