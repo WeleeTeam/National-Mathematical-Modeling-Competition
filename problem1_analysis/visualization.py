@@ -345,6 +345,82 @@ class NIPTVisualizer:
         plt.savefig(save_path.replace('.png', '_06_BMI组Y浓度箱线图.png'), dpi=300, bbox_inches='tight')
         print(f"BMI组Y浓度箱线图已保存: {save_path.replace('.png', '_06_BMI组Y浓度箱线图.png')}")
         plt.close()
+        
+        # 7. 13、18、21号染色体Z值箱线图
+        chromosome_cols = ['13号染色体的Z值', '18号染色体的Z值', '21号染色体的Z值']
+        available_cols = [col for col in chromosome_cols if col in data.columns]
+        
+        if available_cols:
+            plt.figure(figsize=(12, 8))
+            data_melted = data[available_cols].melt(var_name='染色体', value_name='Z值')
+            sns.boxplot(data=data_melted, x='染色体', y='Z值')
+            plt.axhline(y=0, color='red', linestyle='--', alpha=0.7, label='正常值线')
+            plt.title('13、18、21号染色体Z值分布')
+            plt.xticks(rotation=45)
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(save_path.replace('.png', '_07_染色体Z值箱线图.png'), dpi=300, bbox_inches='tight')
+            print(f"染色体Z值箱线图已保存: {save_path.replace('.png', '_07_染色体Z值箱线图.png')}")
+            plt.close()
+        
+        # 8. X和Y染色体浓度箱线图
+        xy_cols = ['X染色体浓度', 'Y染色体浓度']
+        available_xy_cols = [col for col in xy_cols if col in data.columns]
+        
+        if available_xy_cols:
+            plt.figure(figsize=(10, 6))
+            data_melted = data[available_xy_cols].melt(var_name='染色体', value_name='浓度')
+            sns.boxplot(data=data_melted, x='染色体', y='浓度')
+            plt.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='Y染色体达标线')
+            plt.title('X和Y染色体浓度分布')
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(save_path.replace('.png', '_08_XY染色体浓度箱线图.png'), dpi=300, bbox_inches='tight')
+            print(f"XY染色体浓度箱线图已保存: {save_path.replace('.png', '_08_XY染色体浓度箱线图.png')}")
+            plt.close()
+        
+        # 9. 13、18、21号染色体Z值直方图
+        if available_cols:
+            fig, axes = plt.subplots(1, len(available_cols), figsize=(15, 5))
+            if len(available_cols) == 1:
+                axes = [axes]
+            
+            for i, col in enumerate(available_cols):
+                axes[i].hist(data[col].dropna(), bins=30, alpha=0.7, color='skyblue', edgecolor='black')
+                axes[i].axvline(x=0, color='red', linestyle='--', alpha=0.7, label='正常值线')
+                axes[i].set_xlabel('Z值')
+                axes[i].set_ylabel('频数')
+                axes[i].set_title(f'{col}分布')
+                axes[i].grid(True, alpha=0.3)
+                axes[i].legend()
+            
+            plt.tight_layout()
+            plt.savefig(save_path.replace('.png', '_09_染色体Z值直方图.png'), dpi=300, bbox_inches='tight')
+            print(f"染色体Z值直方图已保存: {save_path.replace('.png', '_09_染色体Z值直方图.png')}")
+            plt.close()
+        
+        # 10. X和Y染色体浓度直方图
+        if available_xy_cols:
+            fig, axes = plt.subplots(1, len(available_xy_cols), figsize=(12, 5))
+            if len(available_xy_cols) == 1:
+                axes = [axes]
+            
+            for i, col in enumerate(available_xy_cols):
+                axes[i].hist(data[col].dropna(), bins=30, alpha=0.7, color='lightgreen', edgecolor='black')
+                if col == 'Y染色体浓度':
+                    axes[i].axvline(x=0.04, color='red', linestyle='--', alpha=0.7, label='达标线')
+                axes[i].set_xlabel('浓度')
+                axes[i].set_ylabel('频数')
+                axes[i].set_title(f'{col}分布')
+                axes[i].grid(True, alpha=0.3)
+                axes[i].legend()
+            
+            plt.tight_layout()
+            plt.savefig(save_path.replace('.png', '_10_XY染色体浓度直方图.png'), dpi=300, bbox_inches='tight')
+            print(f"XY染色体浓度直方图已保存: {save_path.replace('.png', '_10_XY染色体浓度直方图.png')}")
+            plt.close()
     
     def _plot_scatter_relationships_separate(self, data: pd.DataFrame, save_path: str):
         """绘制散点图关系（分别保存）"""
