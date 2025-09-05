@@ -14,12 +14,39 @@ from scipy import stats
 import warnings
 warnings.filterwarnings('ignore')
 
-# 设置中文字体
-try:
-    plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
-except:
-    plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
-plt.rcParams['axes.unicode_minus'] = False
+# 设置中文字体 - 解决乱码问题
+import matplotlib.font_manager as fm
+
+# 获取系统中可用的中文字体
+def get_chinese_fonts():
+    """获取系统中可用的中文字体"""
+    chinese_fonts = []
+    for font in fm.fontManager.ttflist:
+        font_name = font.name
+        # 检查是否包含中文字体
+        if any(keyword in font_name.lower() for keyword in ['simhei', 'simsun', 'microsoft', 'yahei', 'kaiti', 'fangsong', 'songti']):
+            chinese_fonts.append(font_name)
+    return chinese_fonts
+
+# 尝试设置中文字体
+chinese_fonts = get_chinese_fonts()
+if chinese_fonts:
+    # 优先使用SimHei，然后是其他中文字体
+    font_list = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi', 'FangSong']
+    available_fonts = [f for f in font_list if f in chinese_fonts]
+    if available_fonts:
+        plt.rcParams['font.sans-serif'] = available_fonts + ['DejaVu Sans']
+        print(f"使用中文字体: {available_fonts[0]}")
+    else:
+        plt.rcParams['font.sans-serif'] = chinese_fonts[:3] + ['DejaVu Sans']
+        print(f"使用中文字体: {chinese_fonts[0]}")
+else:
+    # 如果没有找到中文字体，尝试系统默认
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'DejaVu Sans']
+    print("警告: 未找到中文字体，使用默认设置")
+
+plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+plt.rcParams['font.size'] = 10  # 设置默认字体大小
 
 # 设置seaborn样式
 sns.set_style("whitegrid")
@@ -35,6 +62,22 @@ class NIPTVisualizer:
     
     def __init__(self, output_dir: str = "results/figures/"):
         self.output_dir = output_dir
+        
+        # 强制设置中文字体，确保每次创建实例时都应用
+        self._setup_chinese_font()
+
+    def _setup_chinese_font(self):
+        """设置中文字体"""
+        # 强制重新设置字体配置
+        plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi', 'FangSong', 'DejaVu Sans']
+        plt.rcParams['axes.unicode_minus'] = False
+        plt.rcParams['font.size'] = 10
+        
+        # 清除matplotlib字体缓存
+        try:
+            fm._rebuild()
+        except:
+            pass
         
     def plot_individual_trajectories(self, data: pd.DataFrame, n_subjects: int = 20, 
                                    save_path: str = None):
@@ -112,8 +155,14 @@ class NIPTVisualizer:
         
         plt.close()  # 关闭图形以释放内存
     
-    def plot_scatter_relationships(self, data: pd.DataFrame, save_path: str = None):
+    def plot_scatter_relationships(self, data: pd.DataFrame, save_path: str = None,
+                                  separate_figs: bool = False):
         """绘制散点图矩阵"""
+        
+        if separate_figs and save_path:
+            # 如果需要分别保存，创建单独的图表
+            self._plot_scatter_relationships_separate(data, save_path)
+            return
         
         # 选择主要变量
         vars_to_plot = ['Y染色体浓度', 'gestational_days', '孕妇BMI', '年龄']
@@ -164,8 +213,14 @@ class NIPTVisualizer:
         
         plt.close()  # 关闭图形以释放内存
     
-    def plot_distribution_analysis(self, data: pd.DataFrame, save_path: str = None):
+    def plot_distribution_analysis(self, data: pd.DataFrame, save_path: str = None,
+                                  separate_figs: bool = False):
         """绘制分布分析图"""
+        
+        if separate_figs and save_path:
+            # 如果需要分别保存，创建单独的图表
+            self._plot_distribution_analysis_separate(data, save_path)
+            return
         
         fig, axes = plt.subplots(2, 3, figsize=(15, 10))
         
@@ -215,8 +270,156 @@ class NIPTVisualizer:
         
         plt.close()  # 关闭图形以释放内存
     
-    def plot_model_diagnostics(self, diagnostics: dict, model_name: str, save_path: str = None):
+    def _plot_distribution_analysis_separate(self, data: pd.DataFrame, save_path: str):
+        """绘制分布分析图（分别保存）"""
+        
+        # 1. Y染色体浓度分布
+        plt.figure(figsize=(10, 6))
+        plt.hist(data['Y染色体浓度'], bins=30, alpha=0.7, color='skyblue', edgecolor='black')
+        plt.axvline(x=0.04, color='red', linestyle='--', linewidth=2, label='达标线')
+        plt.xlabel('Y染色体浓度')
+        plt.ylabel('频数')
+        plt.title('Y染色体浓度分布')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_01_Y浓度分布.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度分布图已保存: {save_path.replace('.png', '_01_Y浓度分布.png')}")
+        plt.close()
+        
+        # 2. 孕周分布
+        plt.figure(figsize=(10, 6))
+        plt.hist(data['gestational_days'], bins=25, alpha=0.7, color='lightgreen', edgecolor='black')
+        plt.xlabel('孕周(天数)')
+        plt.ylabel('频数')
+        plt.title('孕周分布')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_02_孕周分布.png'), dpi=300, bbox_inches='tight')
+        print(f"孕周分布图已保存: {save_path.replace('.png', '_02_孕周分布.png')}")
+        plt.close()
+        
+        # 3. BMI分布
+        plt.figure(figsize=(10, 6))
+        plt.hist(data['孕妇BMI'], bins=25, alpha=0.7, color='orange', edgecolor='black')
+        plt.xlabel('BMI')
+        plt.ylabel('频数')
+        plt.title('BMI分布')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_03_BMI分布.png'), dpi=300, bbox_inches='tight')
+        print(f"BMI分布图已保存: {save_path.replace('.png', '_03_BMI分布.png')}")
+        plt.close()
+        
+        # 4. Y浓度的正态概率图
+        plt.figure(figsize=(10, 6))
+        stats.probplot(data['Y染色体浓度'], dist="norm", plot=plt)
+        plt.title('Y浓度正态概率图')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_04_Y浓度正态概率图.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度正态概率图已保存: {save_path.replace('.png', '_04_Y浓度正态概率图.png')}")
+        plt.close()
+        
+        # 5. 对数变换后的Y浓度分布
+        plt.figure(figsize=(10, 6))
+        log_y = np.log(data['Y染色体浓度'] + 0.001)
+        plt.hist(log_y, bins=30, alpha=0.7, color='purple', edgecolor='black')
+        plt.xlabel('log(Y染色体浓度)')
+        plt.ylabel('频数')
+        plt.title('对数变换Y浓度分布')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_05_对数变换Y浓度分布.png'), dpi=300, bbox_inches='tight')
+        print(f"对数变换Y浓度分布图已保存: {save_path.replace('.png', '_05_对数变换Y浓度分布.png')}")
+        plt.close()
+        
+        # 6. 箱线图：不同BMI组的Y浓度
+        plt.figure(figsize=(10, 6))
+        data['BMI_group'] = pd.cut(data['孕妇BMI'], bins=4, labels=['低', '中低', '中高', '高'])
+        sns.boxplot(data=data, x='BMI_group', y='Y染色体浓度')
+        plt.axhline(y=0.04, color='red', linestyle='--', alpha=0.7)
+        plt.title('不同BMI组Y浓度分布')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_06_BMI组Y浓度箱线图.png'), dpi=300, bbox_inches='tight')
+        print(f"BMI组Y浓度箱线图已保存: {save_path.replace('.png', '_06_BMI组Y浓度箱线图.png')}")
+        plt.close()
+    
+    def _plot_scatter_relationships_separate(self, data: pd.DataFrame, save_path: str):
+        """绘制散点图关系（分别保存）"""
+        
+        # 1. Y浓度 vs 孕周
+        plt.figure(figsize=(10, 6))
+        scatter = plt.scatter(data['gestational_days'], data['Y染色体浓度'], 
+                            alpha=0.6, c=data['孕妇BMI'], cmap='viridis')
+        plt.colorbar(scatter, label='BMI')
+        plt.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='达标线')
+        plt.xlabel('孕周(天数)')
+        plt.ylabel('Y染色体浓度')
+        plt.title('Y浓度 vs 孕周数')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_01_Y浓度vs孕周.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度vs孕周图已保存: {save_path.replace('.png', '_01_Y浓度vs孕周.png')}")
+        plt.close()
+        
+        # 2. Y浓度 vs BMI
+        plt.figure(figsize=(10, 6))
+        scatter = plt.scatter(data['孕妇BMI'], data['Y染色体浓度'], 
+                            alpha=0.6, c=data['gestational_days'], cmap='plasma')
+        plt.colorbar(scatter, label='孕周(天数)')
+        plt.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='达标线')
+        plt.xlabel('BMI')
+        plt.ylabel('Y染色体浓度')
+        plt.title('Y浓度 vs BMI')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_02_Y浓度vsBMI.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度vsBMI图已保存: {save_path.replace('.png', '_02_Y浓度vsBMI.png')}")
+        plt.close()
+        
+        # 3. Y浓度 vs 年龄
+        plt.figure(figsize=(10, 6))
+        scatter = plt.scatter(data['年龄'], data['Y染色体浓度'], 
+                            alpha=0.6, c=data['孕妇BMI'], cmap='coolwarm')
+        plt.colorbar(scatter, label='BMI')
+        plt.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='达标线')
+        plt.xlabel('年龄')
+        plt.ylabel('Y染色体浓度')
+        plt.title('Y浓度 vs 年龄')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_03_Y浓度vs年龄.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度vs年龄图已保存: {save_path.replace('.png', '_03_Y浓度vs年龄.png')}")
+        plt.close()
+        
+        # 4. BMI随孕周变化（个体轨迹）
+        plt.figure(figsize=(10, 6))
+        for subject in data['孕妇代码'].unique()[:20]:  # 只显示前20个个体
+            subject_data = data[data['孕妇代码'] == subject]
+            if len(subject_data) > 1:
+                plt.plot(subject_data['gestational_days'], 
+                        subject_data['孕妇BMI'], 'o-', alpha=0.5)
+        plt.xlabel('孕周(天数)')
+        plt.ylabel('BMI')
+        plt.title('BMI随孕周变化(个体轨迹)')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_04_BMI随孕周变化.png'), dpi=300, bbox_inches='tight')
+        print(f"BMI随孕周变化图已保存: {save_path.replace('.png', '_04_BMI随孕周变化.png')}")
+        plt.close()
+    
+    def plot_model_diagnostics(self, diagnostics: dict, model_name: str, save_path: str = None, separate_figs: bool = False):
         """绘制模型诊断图"""
+        
+        if separate_figs and save_path:
+            # 如果需要分别保存，创建单独的图表
+            self._plot_model_diagnostics_separate(diagnostics, model_name, save_path)
+            return
         
         residuals = diagnostics['residuals']
         fitted_values = diagnostics['fitted_values']
@@ -340,8 +543,13 @@ class NIPTVisualizer:
         
         plt.close()  # 关闭图形以释放内存
     
-    def plot_model_comparison(self, comparison_df: pd.DataFrame, save_path: str = None):
+    def plot_model_comparison(self, comparison_df: pd.DataFrame, save_path: str = None, separate_figs: bool = False):
         """绘制模型比较图"""
+        
+        if separate_figs and save_path:
+            # 如果需要分别保存，创建单独的图表
+            self._plot_model_comparison_separate(comparison_df, save_path)
+            return
         
         if comparison_df.empty:
             print("没有模型比较数据可以绘制")
@@ -412,8 +620,17 @@ class NIPTVisualizer:
                                          correlation_matrix: pd.DataFrame,
                                          correlation_pvalues: pd.DataFrame,
                                          bmi_group_correlations: dict,
-                                         save_path: str = None):
+                                         save_path: str = None,
+                                         separate_figs: bool = False):
         """绘制增强版相关性分析图表"""
+        
+        if separate_figs and save_path:
+            # 如果需要分别保存，创建单独的图表
+            self._plot_enhanced_correlation_analysis_separate(
+                data, correlation_matrix, correlation_pvalues, 
+                bmi_group_correlations, save_path
+            )
+            return
         
         fig = plt.figure(figsize=(20, 16))
         
@@ -545,6 +762,284 @@ class NIPTVisualizer:
             print(f"增强相关性分析图已保存: {save_path}")
         
         plt.close()  # 关闭图形以释放内存
+    
+    def _plot_enhanced_correlation_analysis_separate(self, data: pd.DataFrame, 
+                                                   correlation_matrix: pd.DataFrame,
+                                                   correlation_pvalues: pd.DataFrame,
+                                                   bmi_group_correlations: dict,
+                                                   save_path: str):
+        """绘制增强版相关性分析图表（分别保存）"""
+        
+        # 1. 主要变量相关性矩阵
+        plt.figure(figsize=(12, 10))
+        main_vars = ['Y染色体浓度', 'gestational_days', '孕妇BMI', '年龄', '身高', '体重']
+        if 'Y染色体的Z值' in correlation_matrix.index:
+            main_vars.append('Y染色体的Z值')
+        
+        available_vars = [v for v in main_vars if v in correlation_matrix.index]
+        main_corr = correlation_matrix.loc[available_vars, available_vars]
+        mask = np.triu(np.ones_like(main_corr, dtype=bool))
+        sns.heatmap(main_corr, mask=mask, annot=True, cmap='coolwarm',
+                   center=0, square=True, fmt='.3f', cbar_kws={"shrink": .8})
+        plt.title('主要变量相关性矩阵', fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_01_主要变量相关性矩阵.png'), dpi=300, bbox_inches='tight')
+        print(f"主要变量相关性矩阵已保存: {save_path.replace('.png', '_01_主要变量相关性矩阵.png')}")
+        plt.close()
+        
+        # 2. Y染色体浓度相关性条形图
+        plt.figure(figsize=(12, 8))
+        y_correlations = correlation_matrix['Y染色体浓度'].drop('Y染色体浓度').dropna()
+        
+        if 'Y染色体浓度' in correlation_pvalues.index:
+            y_pvalues = correlation_pvalues['Y染色体浓度'].loc[y_correlations.index]
+        else:
+            y_pvalues = pd.Series([np.nan]*len(y_correlations), index=y_correlations.index)
+        
+        # 根据显著性设置颜色
+        colors = []
+        for p in y_pvalues:
+            if pd.isna(p):
+                colors.append('gray')
+            elif p < 0.001:
+                colors.append('red')
+            elif p < 0.01:
+                colors.append('orange')
+            elif p < 0.05:
+                colors.append('yellow')
+            else:
+                colors.append('lightgray')
+        
+        bars = plt.barh(range(len(y_correlations)), y_correlations.values, color=colors)
+        plt.yticks(range(len(y_correlations)), y_correlations.index, rotation=0)
+        plt.xlabel('相关系数 r')
+        plt.title('Y染色体浓度相关性（按显著性着色）', fontsize=14, fontweight='bold')
+        plt.axvline(x=0, color='black', linestyle='-', alpha=0.3)
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_02_Y浓度相关性条形图.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度相关性条形图已保存: {save_path.replace('.png', '_02_Y浓度相关性条形图.png')}")
+        plt.close()
+        
+        # 3. 显著性水平说明
+        plt.figure(figsize=(8, 6))
+        plt.axis('off')
+        legend_elements = [
+            plt.Rectangle((0, 0), 1, 1, color='red', label='p < 0.001 (***)'),
+            plt.Rectangle((0, 0), 1, 1, color='orange', label='p < 0.01 (**)'),
+            plt.Rectangle((0, 0), 1, 1, color='yellow', label='p < 0.05 (*)'),
+            plt.Rectangle((0, 0), 1, 1, color='lightgray', label='p ≥ 0.05 (ns)')
+        ]
+        plt.legend(handles=legend_elements, loc='center', fontsize=14)
+        plt.title('显著性水平说明', fontsize=16, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_03_显著性水平说明.png'), dpi=300, bbox_inches='tight')
+        print(f"显著性水平说明已保存: {save_path.replace('.png', '_03_显著性水平说明.png')}")
+        plt.close()
+        
+        # 4. BMI分组相关性比较
+        if bmi_group_correlations:
+            plt.figure(figsize=(10, 6))
+            groups = list(bmi_group_correlations.keys())
+            gest_corrs = [bmi_group_correlations[g].get('gestational_days', 0) for g in groups]
+            
+            plt.bar(groups, gest_corrs, alpha=0.7, color='skyblue')
+            plt.xlabel('BMI组别')
+            plt.ylabel('Y浓度-孕周相关性 r')
+            plt.title('不同BMI组的相关性差异', fontsize=14, fontweight='bold')
+            plt.xticks(rotation=45)
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            plt.savefig(save_path.replace('.png', '_04_BMI分组相关性比较.png'), dpi=300, bbox_inches='tight')
+            print(f"BMI分组相关性比较已保存: {save_path.replace('.png', '_04_BMI分组相关性比较.png')}")
+            plt.close()
+        
+        # 5. Y染色体浓度 vs 孕周散点图
+        plt.figure(figsize=(12, 8))
+        scatter = plt.scatter(data['gestational_days'], data['Y染色体浓度'], 
+                            c=data['孕妇BMI'], cmap='viridis', alpha=0.6)
+        plt.colorbar(scatter, label='BMI')
+        plt.axhline(y=0.04, color='red', linestyle='--', linewidth=2, label='达标阈值(4%)')
+        plt.xlabel('孕周(天数)')
+        plt.ylabel('Y染色体浓度')
+        plt.title('Y浓度 vs 孕周数（按BMI着色）', fontsize=14, fontweight='bold')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_05_Y浓度vs孕周散点图.png'), dpi=300, bbox_inches='tight')
+        print(f"Y浓度vs孕周散点图已保存: {save_path.replace('.png', '_05_Y浓度vs孕周散点图.png')}")
+        plt.close()
+        
+        # 6. 非线性趋势分析
+        plt.figure(figsize=(12, 8))
+        # 拟合多项式回归线
+        x = data['gestational_days'].dropna()
+        y_all = data['Y染色体浓度']
+        
+        # 找到两个变量都非缺失的索引
+        common_idx = x.index.intersection(y_all.dropna().index)
+        x_clean = x.loc[common_idx]
+        y_clean = y_all.loc[common_idx]
+        
+        if len(x_clean) > 20:
+            # 线性拟合
+            z_linear = np.polyfit(x_clean, y_clean, 1)
+            p_linear = np.poly1d(z_linear)
+            
+            # 二次拟合
+            try:
+                z_quad = np.polyfit(x_clean, y_clean, 2)  
+                p_quad = np.poly1d(z_quad)
+                has_quad = True
+            except:
+                has_quad = False
+            
+            x_smooth = np.linspace(x_clean.min(), x_clean.max(), 100)
+            
+            plt.scatter(x_clean, y_clean, alpha=0.5, color='lightblue', s=20)
+            plt.plot(x_smooth, p_linear(x_smooth), 'r--', linewidth=2, label='线性拟合')
+            
+            if has_quad:
+                plt.plot(x_smooth, p_quad(x_smooth), 'g-', linewidth=2, label='二次拟合')
+            
+            plt.axhline(y=0.04, color='red', linestyle=':', alpha=0.7, label='达标线')
+            
+            plt.xlabel('孕周(天数)')
+            plt.ylabel('Y染色体浓度')
+            plt.title('线性 vs 非线性关系', fontsize=14, fontweight='bold')
+            plt.legend()
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            plt.savefig(save_path.replace('.png', '_06_非线性趋势分析.png'), dpi=300, bbox_inches='tight')
+            print(f"非线性趋势分析已保存: {save_path.replace('.png', '_06_非线性趋势分析.png')}")
+            plt.close()
+    
+    def _plot_model_diagnostics_separate(self, diagnostics: dict, model_name: str, save_path: str):
+        """绘制模型诊断图（分别保存）"""
+        
+        residuals = diagnostics['residuals']
+        fitted_values = diagnostics['fitted_values']
+        std_residuals = diagnostics['std_residuals']
+        
+        # 1. 残差 vs 拟合值
+        plt.figure(figsize=(10, 6))
+        plt.scatter(fitted_values, residuals, alpha=0.6)
+        plt.axhline(y=0, color='red', linestyle='--')
+        plt.xlabel('拟合值')
+        plt.ylabel('残差')
+        plt.title('残差 vs 拟合值')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_01_残差vs拟合值.png'), dpi=300, bbox_inches='tight')
+        print(f"残差vs拟合值图已保存: {save_path.replace('.png', '_01_残差vs拟合值.png')}")
+        plt.close()
+        
+        # 2. 标准化残差 vs 拟合值
+        plt.figure(figsize=(10, 6))
+        plt.scatter(fitted_values, std_residuals, alpha=0.6)
+        plt.axhline(y=0, color='red', linestyle='--')
+        plt.axhline(y=2, color='red', linestyle=':', alpha=0.5)
+        plt.axhline(y=-2, color='red', linestyle=':', alpha=0.5)
+        plt.xlabel('拟合值')
+        plt.ylabel('标准化残差')
+        plt.title('标准化残差 vs 拟合值')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_02_标准化残差vs拟合值.png'), dpi=300, bbox_inches='tight')
+        print(f"标准化残差vs拟合值图已保存: {save_path.replace('.png', '_02_标准化残差vs拟合值.png')}")
+        plt.close()
+        
+        # 3. 残差正态概率图
+        plt.figure(figsize=(10, 6))
+        stats.probplot(residuals, dist="norm", plot=plt)
+        plt.title('残差正态概率图')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_03_残差正态概率图.png'), dpi=300, bbox_inches='tight')
+        print(f"残差正态概率图已保存: {save_path.replace('.png', '_03_残差正态概率图.png')}")
+        plt.close()
+        
+        # 4. 残差直方图
+        plt.figure(figsize=(10, 6))
+        plt.hist(residuals, bins=25, alpha=0.7, color='lightblue', edgecolor='black')
+        plt.xlabel('残差')
+        plt.ylabel('频数')
+        plt.title('残差分布')
+        
+        # 添加正态性检验结果
+        if 'shapiro_p_value' in diagnostics and not np.isnan(diagnostics['shapiro_p_value']):
+            plt.text(0.05, 0.95, f"Shapiro-Wilk p={diagnostics['shapiro_p_value']:.4f}", 
+                    transform=plt.gca().transAxes, verticalalignment='top')
+        
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_04_残差分布.png'), dpi=300, bbox_inches='tight')
+        print(f"残差分布图已保存: {save_path.replace('.png', '_04_残差分布.png')}")
+        plt.close()
+    
+    def _plot_model_comparison_separate(self, comparison_df: pd.DataFrame, save_path: str):
+        """绘制模型比较图（分别保存）"""
+        
+        if comparison_df.empty:
+            print("没有模型比较数据可以绘制")
+            return
+        
+        # 1. AIC比较
+        plt.figure(figsize=(10, 6))
+        has_valid_aic = comparison_df['AIC'].notna().any()
+        
+        if has_valid_aic:
+            bars = plt.bar(range(len(comparison_df)), comparison_df['AIC'], color='skyblue', edgecolor='black')
+            plt.xlabel('模型')
+            plt.ylabel('AIC')
+            plt.title('AIC模型比较 (越小越好)')
+            plt.xticks(range(len(comparison_df)), comparison_df['Model'], rotation=45)
+            
+            # 标记最小值
+            min_idx = comparison_df['AIC'].idxmin()
+            if not pd.isna(min_idx):
+                bars[min_idx].set_color('orange')
+        else:
+            plt.bar(range(len(comparison_df)), [1]*len(comparison_df), color='gray', alpha=0.5)
+            plt.xlabel('模型')
+            plt.ylabel('AIC (不可用)')
+            plt.title('AIC模型比较 (数据不可用)')
+            plt.xticks(range(len(comparison_df)), comparison_df['Model'], rotation=45)
+            plt.text(0.5, 0.5, 'AIC数据不可用', transform=plt.gca().transAxes, 
+                    ha='center', va='center', fontsize=12, alpha=0.7)
+        
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_01_AIC比较.png'), dpi=300, bbox_inches='tight')
+        print(f"AIC比较图已保存: {save_path.replace('.png', '_01_AIC比较.png')}")
+        plt.close()
+        
+        # 2. Delta AIC
+        plt.figure(figsize=(10, 6))
+        has_valid_delta = comparison_df['Delta_AIC'].notna().any()
+        
+        if has_valid_delta:
+            bars = plt.bar(range(len(comparison_df)), comparison_df['Delta_AIC'], color='lightgreen', edgecolor='black')
+            plt.xlabel('模型')
+            plt.ylabel('Delta AIC')
+            plt.title('Delta AIC (与最佳模型的差异)')
+            plt.xticks(range(len(comparison_df)), comparison_df['Model'], rotation=45)
+            plt.axhline(y=2, color='red', linestyle='--', alpha=0.7, label='实质性差异线')
+            plt.legend()
+        else:
+            plt.bar(range(len(comparison_df)), [0]*len(comparison_df), color='gray', alpha=0.5)
+            plt.xlabel('模型')
+            plt.ylabel('Delta AIC (不可用)')
+            plt.title('Delta AIC (数据不可用)')
+            plt.xticks(range(len(comparison_df)), comparison_df['Model'], rotation=45)
+            plt.text(0.5, 0.5, 'Delta AIC数据不可用', transform=plt.gca().transAxes, 
+                    ha='center', va='center', fontsize=12, alpha=0.7)
+        
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(save_path.replace('.png', '_02_DeltaAIC.png'), dpi=300, bbox_inches='tight')
+        print(f"DeltaAIC图已保存: {save_path.replace('.png', '_02_DeltaAIC.png')}")
+        plt.close()
 
 
 if __name__ == "__main__":

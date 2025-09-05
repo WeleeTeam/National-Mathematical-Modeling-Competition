@@ -4,17 +4,33 @@
     "data_directory": "results/data/",
     "reports_directory": "results/reports/",
     "models_directory": "results/models/",
-    "timestamp": "2025-09-05T00:05:52.937136",
+    "timestamp": "2025-09-05T09:16:01.125966",
     "files_in_figures": [
-        "correlation_heatmap.png",
-        "distribution_analysis.png",
-        "enhanced_correlation_analysis.png",
+        "distribution_analysis_01_Y浓度分布.png",
+        "distribution_analysis_02_孕周分布.png",
+        "distribution_analysis_03_BMI分布.png",
+        "distribution_analysis_04_Y浓度正态概率图.png",
+        "distribution_analysis_05_对数变换Y浓度分布.png",
+        "distribution_analysis_06_BMI组Y浓度箱线图.png",
+        "enhanced_correlation_analysis_01_主要变量相关性矩阵.png",
+        "enhanced_correlation_analysis_02_Y浓度相关性条形图.png",
+        "enhanced_correlation_analysis_03_显著性水平说明.png",
+        "enhanced_correlation_analysis_04_BMI分组相关性比较.png",
+        "enhanced_correlation_analysis_05_Y浓度vs孕周散点图.png",
+        "enhanced_correlation_analysis_06_非线性趋势分析.png",
         "fixed_effects.png",
         "individual_trajectories.png",
-        "model_comparison.png",
-        "model_diagnostics.png",
+        "model_comparison_01_AIC比较.png",
+        "model_comparison_02_DeltaAIC.png",
+        "model_diagnostics_01_残差vs拟合值.png",
+        "model_diagnostics_02_标准化残差vs拟合值.png",
+        "model_diagnostics_03_残差正态概率图.png",
+        "model_diagnostics_04_残差分布.png",
         "predicted_vs_observed.png",
-        "scatter_relationships.png"
+        "scatter_relationships_01_Y浓度vs孕周.png",
+        "scatter_relationships_02_Y浓度vsBMI.png",
+        "scatter_relationships_03_Y浓度vs年龄.png",
+        "scatter_relationships_04_BMI随孕周变化.png"
     ],
     "files_in_data": [
         "bmi_group_correlations.json",
@@ -27,7 +43,8 @@
         "summary_statistics.json"
     ],
     "files_in_reports": [
-        "analysis_report.md"
+        "analysis_report.md",
+        "relationship_model_report.md"
     ],
     "files_in_models": [
         "fixed_effects_results.csv",
