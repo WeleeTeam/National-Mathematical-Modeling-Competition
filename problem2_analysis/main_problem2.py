@@ -452,6 +452,9 @@ class Problem2CompleteAnalysis:
             'problem2_results/data/最终临床建议.csv', index=False, encoding='utf-8'
         )
         
+        # 保存模型文件
+        self._save_models()
+        
         # 保存完整结果（JSON格式）
         # 处理不能序列化的对象
         serializable_results = {}
@@ -477,7 +480,98 @@ class Problem2CompleteAnalysis:
         print("分析结果保存完成:")
         print("  ✓ problem2_results/data/ - 数据文件")
         print("  ✓ problem2_results/figures/ - 图表文件")
+        print("  ✓ problem2_results/models/ - 模型文件")
         print("  ✓ problem2_results/reports/ - 分析报告")
+    
+    def _save_models(self):
+        """保存训练好的模型"""
+        import pickle
+        import joblib
+        
+        print("  ✓ 保存决策树模型...")
+        
+        # 保存决策树模型
+        if 'grouping_result' in self.analysis_results and 'tree_model' in self.analysis_results['grouping_result']:
+            tree_model = self.analysis_results['grouping_result']['tree_model']
+            joblib.dump(tree_model, 'problem2_results/models/decision_tree_model.pkl')
+            
+            # 保存决策树特征重要性
+            feature_importance = self.analysis_results['grouping_result'].get('feature_importance', {})
+            with open('problem2_results/models/decision_tree_feature_importance.json', 'w', encoding='utf-8') as f:
+                json.dump(feature_importance, f, ensure_ascii=False, indent=2)
+        
+        print("  ✓ 保存时间预测模型参数...")
+        
+        # 保存时间预测模型参数
+        time_predictor_params = {
+            'model_params': self.time_predictor.model_params,
+            'center_params': self.time_predictor.center_params,
+            'threshold': self.time_predictor.threshold
+        }
+        with open('problem2_results/models/time_prediction_model.json', 'w', encoding='utf-8') as f:
+            json.dump(time_predictor_params, f, ensure_ascii=False, indent=2)
+        
+        print("  ✓ 保存风险模型参数...")
+        
+        # 保存风险模型参数
+        risk_model_params = {
+            'target_success_probability': self.risk_model.target_success_probability,
+            'measurement_error_std': self.risk_model.measurement_error_std,
+            'individual_effect_std': self.risk_model.individual_effect_std,
+            'bmi_min': self.risk_model.bmi_min,
+            'bmi_max': self.risk_model.bmi_max,
+            'detection_min_week': self.risk_model.detection_min_week,
+            'detection_max_week': self.risk_model.detection_max_week,
+            'delay_risk_params': self.risk_model.delay_risk_params,
+            'detection_failure_penalty': self.risk_model.detection_failure_penalty
+        }
+        with open('problem2_results/models/risk_model.json', 'w', encoding='utf-8') as f:
+            json.dump(risk_model_params, f, ensure_ascii=False, indent=2)
+        
+        print("  ✓ 保存优化结果...")
+        
+        # 保存优化结果
+        if 'optimization_results' in self.analysis_results:
+            optimization_summary = {}
+            for group_name, opt_result in self.analysis_results['optimization_results'].items():
+                optimization_summary[group_name] = {
+                    'optimal_test_time_weeks': float(opt_result['optimal_test_time_weeks']),
+                    'minimal_expected_risk': float(opt_result['minimal_expected_risk']),
+                    'group_success_rate_mean': float(opt_result.get('group_success_rate_mean', 0)),
+                    'constraint_satisfaction_rate': float(opt_result.get('constraint_satisfaction_rate', 0)),
+                    'within_group_robust_constraint_valid': bool(opt_result.get('within_group_robust_constraint_valid', False)),
+                    'sample_size': int(opt_result.get('sample_size', 0))
+                }
+            
+            with open('problem2_results/models/optimization_results.json', 'w', encoding='utf-8') as f:
+                json.dump(optimization_summary, f, ensure_ascii=False, indent=2)
+        
+        print("  ✓ 保存敏感性分析结果...")
+        
+        # 保存敏感性分析结果
+        if 'sensitivity_results' in self.analysis_results:
+            sensitivity_summary = {}
+            for group_name, sens_data in self.analysis_results['sensitivity_results'].items():
+                if isinstance(sens_data, pd.DataFrame):
+                    # 转换DataFrame为可序列化的格式
+                    records = sens_data.to_dict('records')
+                    # 确保所有numpy类型都转换为Python原生类型
+                    for record in records:
+                        for key, value in record.items():
+                            if hasattr(value, 'item'):  # numpy scalar
+                                record[key] = value.item()
+                            elif isinstance(value, (np.bool_, bool)):
+                                record[key] = bool(value)
+                            elif isinstance(value, (np.integer, int)):
+                                record[key] = int(value)
+                            elif isinstance(value, (np.floating, float)):
+                                record[key] = float(value)
+                    sensitivity_summary[group_name] = records
+                else:
+                    sensitivity_summary[group_name] = sens_data
+            
+            with open('problem2_results/models/sensitivity_analysis.json', 'w', encoding='utf-8') as f:
+                json.dump(sensitivity_summary, f, ensure_ascii=False, indent=2)
     
     def _generate_analysis_report(self):
         """生成分析报告"""

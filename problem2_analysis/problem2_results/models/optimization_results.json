@@ -1,0 +1,42 @@
+{
+  "Group_1": {
+    "optimal_test_time_weeks": 10.0,
+    "minimal_expected_risk": 0.09999999999999998,
+    "group_success_rate_mean": 0.9958294271363569,
+    "constraint_satisfaction_rate": 1.0,
+    "within_group_robust_constraint_valid": true,
+    "sample_size": 50
+  },
+  "Group_2": {
+    "optimal_test_time_weeks": 10.0,
+    "minimal_expected_risk": 0.09999999999999999,
+    "group_success_rate_mean": 0.9924073657528409,
+    "constraint_satisfaction_rate": 1.0,
+    "within_group_robust_constraint_valid": true,
+    "sample_size": 49
+  },
+  "Group_3": {
+    "optimal_test_time_weeks": 16.453347396735197,
+    "minimal_expected_risk": 0.5237511861159211,
+    "group_success_rate_mean": 0.9963165409165264,
+    "constraint_satisfaction_rate": 1.0,
+    "within_group_robust_constraint_valid": true,
+    "sample_size": 49
+  },
+  "Group_4": {
+    "optimal_test_time_weeks": 16.245885849345633,
+    "minimal_expected_risk": 0.5226447245298433,
+    "group_success_rate_mean": 0.9921366040763318,
+    "constraint_satisfaction_rate": 1.0,
+    "within_group_robust_constraint_valid": true,
+    "sample_size": 49
+  },
+  "Group_5": {
+    "optimal_test_time_weeks": 21.36798281869531,
+    "minimal_expected_risk": 0.5499625750330417,
+    "group_success_rate_mean": 0.9983987383808371,
+    "constraint_satisfaction_rate": 1.0,
+    "within_group_robust_constraint_valid": true,
+    "sample_size": 50
+  }
+}
