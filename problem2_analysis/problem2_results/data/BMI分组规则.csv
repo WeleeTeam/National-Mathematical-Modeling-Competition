@@ -1,0 +1,4 @@
+group_id,group_name,bmi_lower_bound,bmi_upper_bound,bmi_interval_description,sample_size,recommended_test_time_weeks,recommended_test_time_days,expected_risk,clinical_recommendation
+1,BMI组1,20.703125,35.8836345,"[20.7, 35.9]",205,10.0,70,0.1,建议在10.0周检测，属于早期检测，风险较低
+2,BMI组2,33.71967801,39.15984336,"[33.7, 39.2]",15,10.5,74,0.192,建议在10.5周检测，属于早期检测，风险较低
+3,BMI组3,31.8877551,46.875,"[31.9, 46.9]",27,16.0,112,0.521,建议在16.0周检测，属于中期检测，需要密切关注

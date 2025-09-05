@@ -1,0 +1,4 @@
+group_id,group_name,bmi_range,sample_size,recommended_test_time_weeks,recommended_test_time_days,expected_minimal_risk,success_rate,constraint_satisfaction_rate,within_group_robust_constraint_valid,within_group_min_probability,clinical_advice,error_sensitivity
+1,BMI组1,"[20.7, 35.9]",205,11.29490734175214,79.06435139226498,0.21072839778505473,0.9554973435682347,0.6666666666666666,False,0.912031451617294,早期检测，检测成功率高,对测量误差较为敏感，需严格控制检测质量
+2,BMI组2,"[33.7, 39.2]",15,10.000000898097074,70.00000628667952,0.10000000898097072,0.9902933498551407,1.0,True,0.9504264121128649,早期检测，检测成功率高,对测量误差较为敏感，需严格控制检测质量
+3,BMI组3,"[31.9, 46.9]",27,16.140895423328722,112.98626796330106,0.5220847755910865,0.9176108758205835,0.5185185185185185,False,0.4827603090031889,中期检测，检测成功率高,对测量误差较为敏感，需严格控制检测质量
