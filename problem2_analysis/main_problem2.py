@@ -60,7 +60,7 @@ class Problem2CompleteAnalysis:
         # 初始化各个模块
         self.time_predictor = TimePredictionModel()
         self.risk_model = RiskModel()
-        self.decision_tree = DecisionTreeGrouping(max_groups=5, min_samples_per_group=15)
+        self.decision_tree = DecisionTreeGrouping(max_groups=5, min_samples_per_group=20)
         self.visualizer = Problem2Visualizer()
         
         # 存储分析结果
@@ -158,6 +158,9 @@ class Problem2CompleteAnalysis:
         
         # 细化分组边界
         refined_groups = self.decision_tree.refine_grouping_with_bmi_bounds(feature_df)
+        
+        # 验证BMI分段约束
+        constraint_validation = self.decision_tree.validate_bmi_segmentation_constraints(refined_groups)
         
         # 生成分组规则
         grouping_rules = self.decision_tree.generate_grouping_rules(refined_groups)

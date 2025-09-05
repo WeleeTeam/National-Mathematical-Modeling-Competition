@@ -310,6 +310,7 @@ class RiskModel:
                                    time_predictor, min_week=None, max_week=None) -> Dict:
         """
         为单个BMI组优化检测时间（基于三个约束条件）
+        改进版本：优先满足组内稳妥达标约束
         
         Parameters:
         - bmi_group_data: BMI组数据
@@ -328,128 +329,115 @@ class RiskModel:
         if max_week is None:
             max_week = self.detection_max_week
         
-        # 为该组的每个患者求解最优时间，然后取统计量
-        individual_optimal_times = []
-        individual_optimal_risks = []
+        # 首先找到满足组内稳妥达标约束的最早时间
+        group_optimal_time = self._find_group_optimal_time_with_constraint(
+            bmi_group_data, time_predictor, min_week, max_week
+        )
+        
+        # 为该组的每个患者计算在该时间点的风险
         individual_results = []
+        individual_risks = []
+        individual_success_probs = []
         
         for _, patient in bmi_group_data.iterrows():
-            # 单个患者的风险目标函数
-            def risk_objective(t):
-                risk_result = self.calculate_total_risk(
-                    t, patient['孕妇BMI'], patient['年龄'], 
-                    patient['身高'], patient['体重'], time_predictor
-                )
-                return risk_result['total_risk']
-            
-            # 约束优化：在满足95%概率要求的前提下最小化风险
-            # 首先找到满足95%概率的最早时间
-            min_time_for_95_percent = time_predictor.find_time_for_success_probability(
-                patient['孕妇BMI'], patient['年龄'], patient['身高'], patient['体重'],
-                target_prob=self.target_success_probability
+            risk_breakdown = self.calculate_total_risk(
+                group_optimal_time, patient['孕妇BMI'], patient['年龄'],
+                patient['身高'], patient['体重'], time_predictor
             )
             
-            if min_time_for_95_percent is None:
-                # 无法在合理时间内达到95%，使用最大时间
-                min_time_for_95_percent = max_week * 7
+            individual_results.append({
+                '孕妇代码': patient.get('孕妇代码', 'Unknown'),
+                'optimal_time_days': group_optimal_time,
+                'optimal_time_weeks': group_optimal_time / 7,
+                'total_risk': risk_breakdown['total_risk'],
+                'success_probability': risk_breakdown['success_probability'],
+                'detection_failure_risk': risk_breakdown['detection_failure_risk'],
+                'delay_risk': risk_breakdown['delay_risk'],
+                'satisfies_constraint': risk_breakdown['satisfies_constraint']
+            })
             
-            # 确保搜索范围满足约束条件2：10 ≤ τ_g ≤ 25周
-            search_min = max(min_week * 7, min_time_for_95_percent)
-            search_max = max_week * 7
-            
-            if search_min >= search_max:
-                # 调整搜索范围
-                search_max = search_min + 14  # 至少给2周的搜索空间
-            
-            try:
-                # 在满足约束的范围内优化
-                result = minimize_scalar(
-                    risk_objective,
-                    bounds=(search_min, search_max),
-                    method='bounded'
-                )
-                
-                optimal_time = result.x
-                optimal_risk = result.fun
-                
-                # 验证最优解确实满足约束
-                risk_breakdown = self.calculate_total_risk(
-                    optimal_time, patient['孕妇BMI'], patient['年龄'],
-                    patient['身高'], patient['体重'], time_predictor
-                )
-                
-                individual_optimal_times.append(optimal_time)
-                individual_optimal_risks.append(optimal_risk)
-                individual_results.append({
-                    '孕妇代码': patient.get('孕妇代码', 'Unknown'),
-                    'optimal_time_days': optimal_time,
-                    'optimal_time_weeks': optimal_time / 7,
-                    'total_risk': optimal_risk,
-                    'success_probability': risk_breakdown['success_probability'],
-                    'detection_failure_risk': risk_breakdown['detection_failure_risk'],
-                    'delay_risk': risk_breakdown['delay_risk'],
-                    'satisfies_constraint': risk_breakdown['satisfies_constraint']
-                })
-                
-            except Exception as e:
-                print(f"患者优化失败: {e}")
-                # 使用备用方案：95%概率对应的时间
-                fallback_time = min_time_for_95_percent if min_time_for_95_percent else search_min
-                fallback_risk = risk_objective(fallback_time)
-                
-                individual_optimal_times.append(fallback_time)
-                individual_optimal_risks.append(fallback_risk)
+            individual_risks.append(risk_breakdown['total_risk'])
+            individual_success_probs.append(risk_breakdown['success_probability'])
         
-        # 组级别的统计结果
-        if individual_optimal_times:
-            group_optimal_time = np.mean(individual_optimal_times)
-            group_optimal_risk = np.mean(individual_optimal_risks)
-            
-            # 检查组内稳妥达标约束：inf π(τ_g, b) ≥ p₀
-            constraint_valid, min_probability = self.check_within_group_robust_constraint(
-                bmi_group_data, group_optimal_time / 7, time_predictor
+        # 计算组统计结果
+        group_optimal_risk = np.mean(individual_risks)
+        
+        # 检查组内稳妥达标约束：inf π(τ_g, b) ≥ p₀
+        constraint_valid, min_probability = self.check_within_group_robust_constraint(
+            bmi_group_data, group_optimal_time / 7, time_predictor
+        )
+        
+        # 如果约束不满足，尝试调整时间
+        if not constraint_valid:
+            print(f"警告：组内稳妥达标约束不满足，尝试调整检测时间...")
+            adjusted_time = self._adjust_time_for_constraint(
+                bmi_group_data, time_predictor, group_optimal_time, min_week, max_week
             )
             
-            # 计算组的综合风险分析
-            group_risk_analysis = []
-            for _, patient in bmi_group_data.iterrows():
-                risk_breakdown = self.calculate_total_risk(
-                    group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                    patient['身高'], patient['体重'], time_predictor
+            if adjusted_time != group_optimal_time:
+                group_optimal_time = adjusted_time
+                # 重新计算所有指标
+                individual_results = []
+                individual_risks = []
+                individual_success_probs = []
+                
+                for _, patient in bmi_group_data.iterrows():
+                    risk_breakdown = self.calculate_total_risk(
+                        group_optimal_time, patient['孕妇BMI'], patient['年龄'],
+                        patient['身高'], patient['体重'], time_predictor
+                    )
+                    
+                    individual_results.append({
+                        '孕妇代码': patient.get('孕妇代码', 'Unknown'),
+                        'optimal_time_days': group_optimal_time,
+                        'optimal_time_weeks': group_optimal_time / 7,
+                        'total_risk': risk_breakdown['total_risk'],
+                        'success_probability': risk_breakdown['success_probability'],
+                        'detection_failure_risk': risk_breakdown['detection_failure_risk'],
+                        'delay_risk': risk_breakdown['delay_risk'],
+                        'satisfies_constraint': risk_breakdown['satisfies_constraint']
+                    })
+                    
+                    individual_risks.append(risk_breakdown['total_risk'])
+                    individual_success_probs.append(risk_breakdown['success_probability'])
+                
+                group_optimal_risk = np.mean(individual_risks)
+                constraint_valid, min_probability = self.check_within_group_robust_constraint(
+                    bmi_group_data, group_optimal_time / 7, time_predictor
                 )
-                group_risk_analysis.append(risk_breakdown)
-            
-            # 统计组层面的成功率
-            success_rates = [r['success_probability'] for r in group_risk_analysis]
-            constraint_satisfaction_rate = np.mean([r['satisfies_constraint'] for r in group_risk_analysis])
-            
-            return {
-                'optimal_test_time_days': group_optimal_time,
-                'optimal_test_time_weeks': group_optimal_time / 7,
-                'minimal_expected_risk': group_optimal_risk,
-                'optimization_success': True,
-                'group_success_rate_mean': np.mean(success_rates),
-                'group_success_rate_min': np.min(success_rates),
-                'constraint_satisfaction_rate': constraint_satisfaction_rate,
-                'within_group_robust_constraint_valid': constraint_valid,
-                'within_group_min_probability': min_probability,
-                'individual_results': individual_results,
-                'sample_size': len(bmi_group_data),
-                'detailed_analysis': {
-                    'total_risk_mean': np.mean([r['total_risk'] for r in group_risk_analysis]),
-                    'detection_failure_risk_mean': np.mean([r['detection_failure_risk'] for r in group_risk_analysis]),
-                    'delay_risk_mean': np.mean([r['delay_risk'] for r in group_risk_analysis]),
-                    'success_rate': np.mean(success_rates)
-                }
+        
+        # 计算组的综合风险分析
+        group_risk_analysis = []
+        for _, patient in bmi_group_data.iterrows():
+            risk_breakdown = self.calculate_total_risk(
+                group_optimal_time, patient['孕妇BMI'], patient['年龄'],
+                patient['身高'], patient['体重'], time_predictor
+            )
+            group_risk_analysis.append(risk_breakdown)
+        
+        # 统计组层面的成功率
+        success_rates = [r['success_probability'] for r in group_risk_analysis]
+        constraint_satisfaction_rate = np.mean([r['satisfies_constraint'] for r in group_risk_analysis])
+        
+        return {
+            'optimal_test_time_days': group_optimal_time,
+            'optimal_test_time_weeks': group_optimal_time / 7,
+            'minimal_expected_risk': group_optimal_risk,
+            'optimization_success': True,
+            'group_success_rate_mean': np.mean(success_rates),
+            'group_success_rate_min': np.min(success_rates),
+            'constraint_satisfaction_rate': constraint_satisfaction_rate,
+            'within_group_robust_constraint_valid': constraint_valid,
+            'within_group_min_probability': min_probability,
+            'individual_results': individual_results,
+            'sample_size': len(bmi_group_data),
+            'detailed_analysis': {
+                'total_risk_mean': np.mean([r['total_risk'] for r in group_risk_analysis]),
+                'detection_failure_risk_mean': np.mean([r['detection_failure_risk'] for r in group_risk_analysis]),
+                'delay_risk_mean': np.mean([r['delay_risk'] for r in group_risk_analysis]),
+                'success_rate': np.mean(success_rates)
             }
-        else:
-            return {
-                'optimal_test_time_days': None,
-                'optimal_test_time_weeks': None,
-                'minimal_expected_risk': float('inf'),
-                'optimization_success': False,
-                'error': '无法为该组找到有效的优化解'
-            }
+        }
     
     def analyze_sensitivity_to_error(self, test_time: float, bmi_group_data: pd.DataFrame,
                                    time_predictor, error_range: List[float]) -> pd.DataFrame:
@@ -489,6 +477,76 @@ class RiskModel:
         self.measurement_error_std = original_error
         
         return pd.DataFrame(results)
+    
+    def _find_group_optimal_time_with_constraint(self, bmi_group_data: pd.DataFrame, 
+                                               time_predictor, min_week: int, max_week: int) -> float:
+        """
+        找到满足组内稳妥达标约束的最优时间
+        
+        Parameters:
+        - bmi_group_data: BMI组数据
+        - time_predictor: 时间预测模型
+        - min_week, max_week: 检测时间范围（周）
+        
+        Returns:
+        - optimal_time: 最优检测时间（天）
+        """
+        import numpy as np
+        
+        # 为每个患者找到满足95%概率的最早时间
+        individual_min_times = []
+        
+        for _, patient in bmi_group_data.iterrows():
+            min_time = time_predictor.find_time_for_success_probability(
+                patient['孕妇BMI'], patient['年龄'], patient['身高'], patient['体重'],
+                target_prob=self.target_success_probability
+            )
+            
+            if min_time is not None:
+                individual_min_times.append(min_time)
+        
+        if not individual_min_times:
+            # 如果所有患者都无法达到95%，使用最大时间
+            return max_week * 7
+        
+        # 取所有患者中最大的最小时间，确保所有患者都能满足约束
+        group_min_time = max(individual_min_times)
+        
+        # 确保在合理范围内
+        group_min_time = max(group_min_time, min_week * 7)
+        group_min_time = min(group_min_time, max_week * 7)
+        
+        return group_min_time
+    
+    def _adjust_time_for_constraint(self, bmi_group_data: pd.DataFrame, time_predictor,
+                                  current_time: float, min_week: int, max_week: int) -> float:
+        """
+        调整检测时间以满足组内稳妥达标约束
+        
+        Parameters:
+        - bmi_group_data: BMI组数据
+        - time_predictor: 时间预测模型
+        - current_time: 当前检测时间（天）
+        - min_week, max_week: 检测时间范围（周）
+        
+        Returns:
+        - adjusted_time: 调整后的检测时间（天）
+        """
+        import numpy as np
+        
+        # 在合理范围内搜索满足约束的时间
+        search_times = np.linspace(current_time, max_week * 7, 20)
+        
+        for test_time in search_times:
+            constraint_valid, min_prob = self.check_within_group_robust_constraint(
+                bmi_group_data, test_time / 7, time_predictor
+            )
+            
+            if constraint_valid:
+                return test_time
+        
+        # 如果仍然无法满足约束，返回当前时间
+        return current_time
 
 
 if __name__ == "__main__":
