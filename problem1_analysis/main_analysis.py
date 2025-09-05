@@ -171,9 +171,9 @@ class Problem1Analysis:
         # 综合所有变量
         all_numeric_vars = core_vars + z_score_vars + gc_vars + seq_quality_vars + clinical_vars
         
-        # 2. 计算全面相关性矩阵
+        # 2. 计算全面相关性矩阵（使用Spearman相关系数）
         corr_input = self.processed_data[all_numeric_vars].apply(pd.to_numeric, errors='coerce')
-        correlation_matrix = corr_input.corr()
+        correlation_matrix = corr_input.corr(method='spearman')
         self.analysis_results['correlation_matrix'] = correlation_matrix
         
         # 3. 计算相关性的显著性检验
@@ -224,19 +224,14 @@ class Problem1Analysis:
             model_name="interaction_effects"
         )
         
-        # 模型4：非线性时间效应模型
-        result4 = self.model_analyzer.fit_nonlinear_model(
-            self.processed_data,
-            model_name="nonlinear_time"
-        )
         
         print(f"共拟合了{len(self.model_analyzer.results)}个模型")
     
     def model_comparison(self):
         """模型比较与选择"""
         
-        # 比较模型
-        comparison_df = self.model_analyzer.compare_models()
+        # 使用增强的模型比较（包含R方等统计指标）
+        comparison_df = self.model_analyzer.compare_models_enhanced(self.processed_data)
         self.analysis_results['model_comparison'] = comparison_df
         
         # 绘制模型比较图
@@ -248,45 +243,90 @@ class Problem1Analysis:
             )
         
         print("模型比较完成")
+        
+        # 显示增强的模型比较结果
+        print("\n" + "="*80)
+        print("增强的模型比较结果（包含R方等统计指标）")
+        print("="*80)
+        print(comparison_df.round(4))
     
     def significance_testing(self):
         """显著性检验"""
         
-        # 获取最佳模型
-        best_model_name = self.model_analyzer.best_model
+        # 获取所有模型的固定效应和统计指标
+        all_fixed_effects = {}
+        all_model_stats = {}
         
-        if best_model_name:
-            print(f"分析最佳模型: {best_model_name}")
+        for model_name in self.model_analyzer.results.keys():
+            print(f"分析模型: {model_name}")
             
             # 固定效应检验
-            fixed_effects_df = self.model_analyzer.test_fixed_effects(best_model_name)
-            self.analysis_results['best_model_fixed_effects'] = fixed_effects_df
+            fixed_effects_df = self.model_analyzer.test_fixed_effects(model_name)
+            if fixed_effects_df is not None:
+                all_fixed_effects[model_name] = fixed_effects_df
             
-            # 随机效应分析
-            random_effects_info = self.model_analyzer.test_random_effects(best_model_name)
-            self.analysis_results['best_model_random_effects'] = random_effects_info
-            
-            # 计算R平方
+            # 计算R平方等统计指标
             r_squared_info = self.model_analyzer.calculate_r_squared(
-                best_model_name, 
+                model_name, 
                 self.processed_data
             )
-            self.analysis_results['best_model_r_squared'] = r_squared_info
+            if r_squared_info is not None:
+                all_model_stats[model_name] = r_squared_info
+                
+                # 如果是最佳模型，进行额外分析
+                if model_name == self.model_analyzer.best_model:
+                    self.analysis_results['best_model_fixed_effects'] = fixed_effects_df
+                    self.analysis_results['best_model_r_squared'] = r_squared_info
+                    
+                    # 随机效应分析
+                    random_effects_info = self.model_analyzer.test_random_effects(model_name)
+                    self.analysis_results['best_model_random_effects'] = random_effects_info
+                    
+                    # 绘制固定效应图
+                    if fixed_effects_df is not None:
+                        self.visualizer.plot_fixed_effects(
+                            fixed_effects_df,
+                            save_path=self.results_manager.get_figure_path("fixed_effects.png")
+                        )
+        
+        # 保存所有模型的结果
+        self.analysis_results['all_fixed_effects'] = all_fixed_effects
+        self.analysis_results['all_model_stats'] = all_model_stats
+        
+        print("显著性检验完成")
+        
+        # 显示所有模型的统计指标
+        print("\n" + "="*80)
+        print("所有模型的统计指标对比")
+        print("="*80)
+        
+        for model_name, stats in all_model_stats.items():
+            print(f"\n模型: {model_name}")
+            print(f"  伪R²: {stats.get('Pseudo_R2', 'N/A'):.4f}")
+            print(f"  相关系数: {stats.get('Correlation', 'N/A'):.4f}")
+            print(f"  相关系数R²: {stats.get('Correlation_R2', 'N/A'):.4f}")
+        
+        # 显示最佳模型结果
+        best_model_name = self.model_analyzer.best_model
+        if best_model_name and best_model_name in all_fixed_effects:
+            print(f"\n" + "="*50)
+            print(f"最佳模型 {best_model_name} 的详细结果:")
+            print("="*50)
             
-            # 绘制固定效应图
-            if fixed_effects_df is not None:
-                self.visualizer.plot_fixed_effects(
-                    fixed_effects_df,
-                    save_path=self.results_manager.get_figure_path("fixed_effects.png")
-                )
+            # 显示统计指标
+            if best_model_name in all_model_stats:
+                stats = all_model_stats[best_model_name]
+                print(f"伪R²: {stats.get('Pseudo_R2', 'N/A'):.4f}")
+                print(f"相关系数: {stats.get('Correlation', 'N/A'):.4f}")
+                print(f"相关系数R²: {stats.get('Correlation_R2', 'N/A'):.4f}")
             
-            print("显著性检验完成")
-            print("\n主要固定效应结果:")
-            if fixed_effects_df is not None:
-                for _, row in fixed_effects_df.iterrows():
-                    if row['Variable'] != 'const':
-                        print(f"{row['Variable']}: 系数={row['Coefficient']:.6f}, "
-                              f"p值={row['p_value']:.6f}, 显著性={row['Significance']}")
+            # 显示固定效应
+            fixed_effects_df = all_fixed_effects[best_model_name]
+            print(f"\n固定效应结果:")
+            for _, row in fixed_effects_df.iterrows():
+                if row['Variable'] != 'const':
+                    print(f"  {row['Variable']}: 系数={row['Coefficient']:.6f}, "
+                          f"p值={row['p_value']:.6f}, 显著性={row['Significance']}")
         else:
             print("没有找到最佳模型")
     
@@ -638,12 +678,19 @@ class Problem1Analysis:
                 self.analysis_results['model_comparison']
             )
         
-        # 保存固定效应结果
-        if 'best_model_fixed_effects' in self.analysis_results:
+        # 保存所有模型的固定效应结果
+        if 'all_fixed_effects' in self.analysis_results:
+            self.results_manager.save_fixed_effects_results(self.analysis_results['all_fixed_effects'])
+        elif 'best_model_fixed_effects' in self.analysis_results:
+            # 兼容性：如果只有最佳模型结果，也保存
             fixed_effects_dict = {
                 self.model_analyzer.best_model: self.analysis_results['best_model_fixed_effects']
             }
             self.results_manager.save_fixed_effects_results(fixed_effects_dict)
+        
+        # 保存所有模型的统计指标
+        if 'all_model_stats' in self.analysis_results:
+            self.results_manager.save_model_statistics(self.analysis_results['all_model_stats'])
         
         # 保存预测结果
         if 'model_predictions' in self.analysis_results:
@@ -704,8 +751,8 @@ class Problem1Analysis:
         return findings
     
     def _calculate_correlation_pvalues(self, data: pd.DataFrame) -> pd.DataFrame:
-        """计算相关性的p值"""
-        from scipy.stats import pearsonr
+        """计算相关性的p值（使用Spearman相关系数）"""
+        from scipy.stats import spearmanr
         
         variables = data.columns.tolist()
         n_vars = len(variables)
@@ -723,7 +770,7 @@ class Problem1Analysis:
                     # 找到两个变量都非缺失的索引
                     common_idx = var1.index.intersection(var2.index)
                     if len(common_idx) > 10:  # 至少需要10个观测点
-                        _, p_val = pearsonr(var1.loc[common_idx], var2.loc[common_idx])
+                        _, p_val = spearmanr(var1.loc[common_idx], var2.loc[common_idx])
                         pvalue_matrix[i, j] = p_val
                         pvalue_matrix[j, i] = p_val
                 except:
@@ -752,7 +799,7 @@ class Problem1Analysis:
                             core_vars.append('Y染色体的Z值')
                         
                         group_corr_input = group_data[core_vars].apply(pd.to_numeric, errors='coerce')
-                        group_corr = group_corr_input.corr()
+                        group_corr = group_corr_input.corr(method='spearman')
                         
                         # 重点关注Y染色体浓度的相关性
                         y_correlations = group_corr['Y染色体浓度'].drop('Y染色体浓度')
@@ -779,33 +826,23 @@ class Problem1Analysis:
             y_conc = data['Y染色体浓度']
             
             try:
-                from scipy.stats import pearsonr, spearmanr
+                from scipy.stats import spearmanr
                 
-                # 线性相关性
-                linear_corr, linear_p = pearsonr(data['gestational_days'].dropna(), 
-                                               y_conc.dropna())
-                
-                # Spearman相关性（非参数，能捕获单调非线性关系）
+                # 主要使用Spearman相关性（非参数，能捕获单调非线性关系）
                 spear_corr, spear_p = spearmanr(data['gestational_days'].dropna(), 
                                               y_conc.dropna())
                 
                 nonlinear_results['gestational_days'] = {
-                    'linear_corr': linear_corr,
-                    'linear_p': linear_p,
                     'spearman_corr': spear_corr,
                     'spearman_p': spear_p
                 }
                 
                 # BMI的非线性分析
                 if '孕妇BMI' in data.columns:
-                    bmi_linear_corr, bmi_linear_p = pearsonr(data['孕妇BMI'].dropna(), 
-                                                           y_conc.dropna())
                     bmi_spear_corr, bmi_spear_p = spearmanr(data['孕妇BMI'].dropna(), 
                                                           y_conc.dropna())
                     
                     nonlinear_results['孕妇BMI'] = {
-                        'linear_corr': bmi_linear_corr,
-                        'linear_p': bmi_linear_p,
                         'spearman_corr': bmi_spear_corr,
                         'spearman_p': bmi_spear_p
                     }
@@ -838,33 +875,31 @@ class Problem1Analysis:
                         direction = "正相关" if corr_val > 0 else "负相关"
                         strength = "强" if abs(corr_val) > 0.7 else "中等" if abs(corr_val) > 0.3 else "弱"
                         
-                        print(f"  {var}: r={corr_val:.4f}, p={p_val:.4f} ({strength}{direction}, {significance})")
+                        print(f"  {var}: ρ={corr_val:.4f}, p={p_val:.4f} ({strength}{direction}, {significance})")
                 except:
                     print(f"  {var}: 无法计算")
         
         # Z值相关性
         if 'Y染色体的Z值' in correlation_matrix.index:
-            print("\n2. Y染色体相关Z值分析：")
+            print("\n2. Y染色体相关Z值分析（Spearman）：")
             z_corr = correlation_matrix.loc['Y染色体浓度', 'Y染色体的Z值']
             z_p = correlation_pvalues.loc['Y染色体浓度', 'Y染色体的Z值'] if 'Y染色体浓度' in correlation_pvalues.index else np.nan
-            print(f"  Y染色体浓度 vs Y染色体Z值: r={z_corr:.4f}, p={z_p:.4f}")
+            print(f"  Y染色体浓度 vs Y染色体Z值: ρ={z_corr:.4f}, p={z_p:.4f}")
         
         # BMI分组结果
         if 'bmi_group_correlations' in self.analysis_results:
-            print("\n3. BMI分组相关性差异：")
+            print("\n3. BMI分组相关性差异（Spearman）：")
             for group, correlations in self.analysis_results['bmi_group_correlations'].items():
                 if 'gestational_days' in correlations:
-                    print(f"  BMI {group}组: Y浓度-孕周相关性 r={correlations['gestational_days']:.4f}")
+                    print(f"  BMI {group}组: Y浓度-孕周相关性 ρ={correlations['gestational_days']:.4f}")
         
         # 非线性结果
         if 'nonlinear_correlations' in self.analysis_results:
-            print("\n4. 非线性相关性分析：")
+            print("\n4. 非线性相关性分析（Spearman相关系数）：")
             for var, results in self.analysis_results['nonlinear_correlations'].items():
-                linear_r = results.get('linear_corr', np.nan)
                 spear_r = results.get('spearman_corr', np.nan)
-                print(f"  {var}: Pearson r={linear_r:.4f}, Spearman ρ={spear_r:.4f}")
-                if abs(spear_r - linear_r) > 0.1:
-                    print(f"    → 检测到非线性特征（Spearman与Pearson差异>{0.1:.1f}）")
+                spear_p = results.get('spearman_p', np.nan)
+                print(f"  {var}: Spearman ρ={spear_r:.4f}, p={spear_p:.4f}")
 
 
 def main():

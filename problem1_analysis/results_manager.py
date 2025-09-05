@@ -199,6 +199,32 @@ class NIPTResultsManager:
             print("没有固定效应结果可保存")
             return None
     
+    def save_model_statistics(self, model_stats: Dict, 
+                            filename: str = "model_statistics.csv"):
+        """保存所有模型的统计指标"""
+        
+        stats_data = []
+        
+        for model_name, stats in model_stats.items():
+            if stats is not None:
+                stats_row = {
+                    'Model': model_name,
+                    'Pseudo_R2': stats.get('Pseudo_R2', np.nan),
+                    'Correlation': stats.get('Correlation', np.nan),
+                    'Correlation_R2': stats.get('Correlation_R2', np.nan)
+                }
+                stats_data.append(stats_row)
+        
+        if stats_data:
+            stats_df = pd.DataFrame(stats_data)
+            filepath = os.path.join(self.models_dir, filename)
+            stats_df.to_csv(filepath, index=False, encoding='utf-8')
+            print(f"模型统计指标已保存: {filepath}")
+            return filepath
+        else:
+            print("没有模型统计指标可保存")
+            return None
+    
     def save_predictions(self, predictions_df: pd.DataFrame, 
                         filename: str = "model_predictions.csv"):
         """保存模型预测结果"""

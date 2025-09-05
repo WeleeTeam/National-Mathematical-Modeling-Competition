@@ -114,36 +114,6 @@ class NIPTMixedEffectsModel:
             print(f"模型 {model_name} 拟合失败: {str(e)}")
             return None
     
-    def fit_nonlinear_model(self, data: pd.DataFrame, model_name: str = "nonlinear"):
-        """拟合非线性时间效应模型"""
-        
-        df = data.copy()
-        rename_map = {
-            'Y染色体浓度': 'y',
-            'gestational_days': 'gd',
-            'BMI_centered': 'bmi_c',
-            'age_centered': 'age_c',
-            '身高': 'height',
-            '体重': 'weight',
-            '孕妇代码': 'group'
-        }
-        df = df.rename(columns=rename_map)
-        
-        try:
-            model = smf.mixedlm(
-                "y ~ gd + I(gd**2) + bmi_c + age_c + height + weight",
-                data=df,
-                groups=df["group"],
-                re_formula="~ gd"
-            )
-            result = model.fit(method='lbfgs')
-            self.models[model_name] = model
-            self.results[model_name] = result
-            print(f"模型 {model_name} 拟合成功")
-            return result
-        except Exception as e:
-            print(f"模型 {model_name} 拟合失败: {str(e)}")
-            return None
     
     def compare_models(self) -> pd.DataFrame:
         """比较不同模型"""
@@ -236,6 +206,89 @@ class NIPTMixedEffectsModel:
             print("模型比较结果:")
             print(comparison_df)
             print(f"\n最佳模型: {self.best_model}")
+        
+        return comparison_df
+    
+    def compare_models_enhanced(self, data: pd.DataFrame) -> pd.DataFrame:
+        """增强的模型比较，包含R方等统计指标"""
+        
+        comparison_data = []
+        
+        for name, result in self.results.items():
+            if result is not None:
+                # 基础统计信息
+                n_params = 0
+                try:
+                    n_fe = len(result.fe_params) if hasattr(result, 'fe_params') else 0
+                    n_re = 1 if hasattr(result, 'cov_re') else 0
+                    if hasattr(result, 're_params') and result.re_params is not None:
+                        n_re = len(result.re_params)
+                    elif hasattr(result, 'vcomp') and result.vcomp is not None:
+                        n_re = len(result.vcomp)
+                    n_resid = 1
+                    n_params = n_fe + n_re + n_resid
+                except Exception:
+                    try:
+                        n_params = len(result.params) if hasattr(result, 'params') else np.nan
+                    except Exception:
+                        n_params = np.nan
+                
+                # 似然值
+                llf_val = np.nan
+                try:
+                    if hasattr(result, 'llf') and result.llf is not None:
+                        llf_val = float(result.llf)
+                    elif hasattr(result, 'loglik') and result.loglik is not None:
+                        llf_val = float(result.loglik)
+                except Exception:
+                    pass
+                
+                # AIC和BIC
+                aic_val = np.nan
+                bic_val = np.nan
+                if not np.isnan(llf_val) and not np.isnan(n_params):
+                    try:
+                        aic_val = -2 * llf_val + 2 * n_params
+                        n_obs = result.nobs if hasattr(result, 'nobs') else len(result.fittedvalues)
+                        bic_val = -2 * llf_val + n_params * np.log(n_obs)
+                    except Exception:
+                        pass
+                
+                # R方等统计指标
+                r_squared_info = self.calculate_r_squared(name, data)
+                pseudo_r2 = r_squared_info.get('Pseudo_R2', np.nan) if r_squared_info else np.nan
+                correlation = r_squared_info.get('Correlation', np.nan) if r_squared_info else np.nan
+                correlation_r2 = r_squared_info.get('Correlation_R2', np.nan) if r_squared_info else np.nan
+                
+                comparison_data.append({
+                    'Model': name,
+                    'AIC': aic_val,
+                    'BIC': bic_val,
+                    'Log-Likelihood': llf_val,
+                    'N_Params': n_params,
+                    'Pseudo_R2': pseudo_r2,
+                    'Correlation': correlation,
+                    'Correlation_R2': correlation_r2,
+                    'Converged': getattr(result, 'converged', True)
+                })
+        
+        comparison_df = pd.DataFrame(comparison_data)
+        
+        if not comparison_df.empty:
+            # 按AIC排序
+            valid_aic = comparison_df['AIC'].notna()
+            if valid_aic.any():
+                comparison_df = comparison_df.sort_values('AIC').reset_index(drop=True)
+                best_aic = comparison_df['AIC'].min()
+                comparison_df['Delta_AIC'] = comparison_df['AIC'] - best_aic
+                self.best_model = comparison_df.iloc[0]['Model']
+            else:
+                comparison_df['Delta_AIC'] = np.nan
+                converged_models = comparison_df[comparison_df['Converged'] == True]
+                if not converged_models.empty:
+                    self.best_model = converged_models.iloc[0]['Model']
+                else:
+                    self.best_model = comparison_df.iloc[0]['Model']
         
         return comparison_df
     
