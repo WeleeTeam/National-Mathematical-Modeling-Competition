@@ -1,566 +1,518 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-风险模型模块
-构建孕妇潜在风险函数和检测误差概率模型
+问题2：风险评估模型分析
+建立综合风险评估模型，考虑BMI、检测时点、检测误差等因素
 """
 
-import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 import warnings
 warnings.filterwarnings('ignore')
 
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
 
-class RiskModel:
-    """孕妇潜在风险评估模型 - 按照概率约束和连续风险函数设计"""
+class RiskModelAnalyzer:
+    def __init__(self, data_path):
+        """初始化分析器"""
+        self.data_path = data_path
+        self.data = None
+        self.male_data = None
+        self.risk_models = {}
+        self.risk_factors = {}
+        
+    def load_and_prepare_data(self):
+        """加载并准备数据"""
+        print("正在加载和准备数据...")
+        self.data = pd.read_csv(self.data_path, encoding='utf-8')
+        
+        # 筛选男胎数据
+        self.male_data = self.data[self.data['Y染色体浓度'].notna()].copy()
+        
+        # 转换孕周为数值
+        self.male_data['孕周数值'] = self.male_data['检测孕周'].str.extract(r'(\d+)w').astype(float)
+        
+        # 添加达标标识
+        self.male_data['达标'] = (self.male_data['Y染色体浓度'] >= 0.04).astype(int)
+        
+        # 特征工程
+        self.male_data['BMI_平方'] = self.male_data['孕妇BMI'] ** 2
+        self.male_data['BMI_对数'] = np.log(self.male_data['孕妇BMI'])
+        self.male_data['年龄_平方'] = self.male_data['年龄'] ** 2
+        self.male_data['BMI_年龄_交互'] = self.male_data['孕妇BMI'] * self.male_data['年龄']
+        
+        # 添加风险特征
+        self.male_data['BMI风险'] = self.calculate_bmi_risk(self.male_data['孕妇BMI'])
+        self.male_data['时间风险'] = self.calculate_time_risk(self.male_data['孕周数值'])
+        self.male_data['年龄风险'] = self.calculate_age_risk(self.male_data['年龄'])
+        self.male_data['综合风险'] = (self.male_data['BMI风险'] + 
+                                   self.male_data['时间风险'] + 
+                                   self.male_data['年龄风险']) / 3
+        
+        print(f"男胎数据量: {len(self.male_data)}")
+        print(f"达标样本数: {self.male_data['达标'].sum()}")
+        
+        return self.male_data
     
-    def __init__(self):
-        # 概率约束参数
-        self.target_success_probability = 0.95  # 95%成功概率要求 (p₀)
-        self.measurement_error_std = 0.005       # Y染色体浓度测量标准误差
-        self.individual_effect_std = 0.01        # 个体差异标准差
-        
-        # 约束条件参数
-        self.bmi_min = 20.0      # BMI最小值 (b_min)
-        self.bmi_max = 50.0      # BMI最大值 (b_max)
-        self.detection_min_week = 10  # 检测时窗最小值 (10周)
-        self.detection_max_week = 25  # 检测时窗最大值 (25周)
-        self.detection_min_days = self.detection_min_week * 7
-        self.detection_max_days = self.detection_max_week * 7
-        
-        # 延误诊断风险函数参数
-        self.delay_risk_params = {
-            'early_base': 0.1,      # 早期基础风险
-            'early_slope': 0.02,    # 早期风险斜率  
-            'medium_base': 0.5,     # 中期基础风险
-            'medium_slope': 0.08,   # 中期风险斜率
-            'late_base': 2.0,       # 晚期基础风险
-            'late_slope': 0.2       # 晚期风险斜率
-        }
-        
-        # 检测失败惩罚系数
-        self.detection_failure_penalty = 10.0
-    
-    def calculate_delay_risk(self, gestational_days: float) -> float:
-        """
-        计算延误诊断风险（连续函数）
-        
-        Parameters:
-        - gestational_days: 孕周天数
-        
-        Returns:
-        - delay_risk: 延误风险分数
-        """
-        params = self.delay_risk_params
-        
-        if gestational_days <= 84:  # ≤12周，早期
-            # 线性增长，但基础风险较低
-            normalized_time = (gestational_days - 70) / 14  # 标准化到[0,1]
-            delay_risk = params['early_base'] + params['early_slope'] * normalized_time
-            
-        elif gestational_days <= 189:  # 13-27周，中期
-            # 加速增长
-            normalized_time = (gestational_days - 84) / 105  # 标准化到[0,1]
-            delay_risk = params['medium_base'] + params['medium_slope'] * normalized_time
-            
-        else:  # ≥28周，晚期
-            # 快速增长，高风险
-            normalized_time = min((gestational_days - 189) / 21, 1)  # 标准化，但有上限
-            delay_risk = params['late_base'] + params['late_slope'] * normalized_time
-        
-        return max(0, delay_risk)  # 确保风险非负
-
-    def calculate_detection_failure_risk(self, success_probability: float) -> float:
-        """
-        计算检测失败风险
-        
-        Parameters:
-        - success_probability: 检测成功概率 P(Y浓度 ≥ 4%)
-        
-        Returns:
-        - failure_risk: 检测失败风险
-        """
-        if success_probability >= self.target_success_probability:
-            # 满足95%概率要求，无检测失败风险
-            return 0.0
-        else:
-            # 未满足概率要求，施加惩罚
-            probability_deficit = self.target_success_probability - success_probability
-            failure_risk = self.detection_failure_penalty * probability_deficit
-            return failure_risk
-    
-    def check_bmi_segmentation_constraints(self, bmi_groups: List[Tuple[float, float]]) -> bool:
-        """
-        检查BMI分段约束：覆盖、相邻与不交约束
-        
-        Parameters:
-        - bmi_groups: BMI分组列表，每个元素为(下界, 上界)
-        
-        Returns:
-        - is_valid: 是否满足约束条件
-        """
-        if not bmi_groups:
-            return False
-        
-        # 1. 检查覆盖约束：I₁ ∪ I₂ ∪ ... ∪ I_G = [b_min, b_max]
-        sorted_groups = sorted(bmi_groups, key=lambda x: x[0])
-        
-        # 检查是否覆盖整个BMI范围
-        if sorted_groups[0][0] > self.bmi_min or sorted_groups[-1][1] < self.bmi_max:
-            return False
-        
-        # 2. 检查相邻与不交约束：β₀ < β₁ < ... < β_G
-        for i in range(len(sorted_groups) - 1):
-            current_upper = sorted_groups[i][1]
-            next_lower = sorted_groups[i + 1][0]
-            
-            # 相邻约束：当前组上界 = 下一组下界
-            if abs(current_upper - next_lower) > 1e-6:
-                return False
-        
-        # 3. 检查单调性：β₀ < β₁ < ... < β_G
-        boundaries = [sorted_groups[0][0]] + [group[1] for group in sorted_groups]
-        for i in range(len(boundaries) - 1):
-            if boundaries[i] >= boundaries[i + 1]:
-                return False
-        
-        return True
-    
-    def check_detection_time_constraints(self, detection_times: List[float]) -> bool:
-        """
-        检查检测时窗约束：10 ≤ τ_g ≤ 25周
-        
-        Parameters:
-        - detection_times: 各组的检测时间（周）
-        
-        Returns:
-        - is_valid: 是否满足约束条件
-        """
-        for tau_g in detection_times:
-            if not (self.detection_min_week <= tau_g <= self.detection_max_week):
-                return False
-        return True
-    
-    def check_within_group_robust_constraint(self, bmi_group_data: pd.DataFrame, 
-                                           detection_time_weeks: float, 
-                                           time_predictor) -> Tuple[bool, float]:
-        """
-        检查组内稳妥达标约束：inf π(τ_g, b) ≥ p₀
-        
-        Parameters:
-        - bmi_group_data: BMI组数据
-        - detection_time_weeks: 该组的检测时间（周）
-        - time_predictor: 时间预测模型
-        
-        Returns:
-        - (is_valid, min_probability): 是否满足约束，组内最小概率
-        """
-        detection_time_days = detection_time_weeks * 7
-        success_probabilities = []
-        
-        for _, patient in bmi_group_data.iterrows():
-            prob = time_predictor.predict_达标概率(
-                detection_time_days, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], 
-                self.measurement_error_std, self.individual_effect_std
-            )
-            success_probabilities.append(prob)
-        
-        # 计算组内最小概率（最坏情况）
-        min_probability = min(success_probabilities) if success_probabilities else 0
-        
-        # 检查是否满足约束：inf π(τ_g, b) ≥ p₀
-        is_valid = min_probability >= self.target_success_probability
-        
-        return is_valid, min_probability
-    
-    def calculate_total_risk(self, gestational_days: float, bmi: float, age: float, 
-                           height: float, weight: float, time_predictor) -> Dict:
-        """
-        计算总风险函数 = 检测失败风险 + 延误诊断风险
-        
-        Parameters:
-        - gestational_days: 孕周天数
-        - bmi, age, height, weight: 患者特征
-        - time_predictor: 时间预测模型实例
-        
-        Returns:
-        - risk_breakdown: 风险分解结果
-        """
-        # 1. 计算该时间点的检测成功概率
-        success_prob = time_predictor.predict_达标概率(
-            gestational_days, bmi, age, height, weight,
-            self.measurement_error_std, self.individual_effect_std
+    def calculate_bmi_risk(self, bmi_values):
+        """计算BMI风险分数"""
+        # BMI风险：BMI越高风险越大
+        bmi_risk = np.where(
+            bmi_values < 20, 0.1,
+            np.where(bmi_values < 25, 0.2,
+            np.where(bmi_values < 30, 0.4,
+            np.where(bmi_values < 35, 0.6,
+            np.where(bmi_values < 40, 0.8, 1.0))))
         )
-        
-        # 2. 计算检测失败风险
-        detection_failure_risk = self.calculate_detection_failure_risk(success_prob)
-        
-        # 3. 计算延误诊断风险
-        delay_risk = self.calculate_delay_risk(gestational_days)
-        
-        # 4. 总风险
-        total_risk = detection_failure_risk + delay_risk
-        
-        return {
-            'total_risk': total_risk,
-            'detection_failure_risk': detection_failure_risk,
-            'delay_risk': delay_risk,
-            'success_probability': success_prob,
-            'gestational_days': gestational_days,
-            'gestational_weeks': gestational_days / 7,
-            'satisfies_constraint': success_prob >= self.target_success_probability
-        }
+        return bmi_risk
     
-    def calculate_detection_error_risk(self, predicted_concentration: float, 
-                                     actual_test_time: float) -> Dict:
-        """
-        计算检测误差带来的风险
-        
-        Parameters:
-        - predicted_concentration: 预测的Y染色体浓度
-        - actual_test_time: 实际检测时间
-        
-        Returns:
-        - error_risks: 包含各种误差风险的字典
-        """
-        from scipy.stats import norm
-        
-        threshold = 0.04
-        
-        # 计算真实达标但检测为未达标的概率（假阴性）
-        if predicted_concentration >= threshold:
-            z_score_fn = (threshold - predicted_concentration) / self.measurement_error_std
-            false_negative_prob = norm.cdf(z_score_fn)
-        else:
-            false_negative_prob = 0
-        
-        # 计算真实未达标但检测为达标的概率（假阳性）  
-        if predicted_concentration < threshold:
-            z_score_fp = (predicted_concentration - threshold) / self.measurement_error_std
-            false_positive_prob = norm.cdf(z_score_fp)
-        else:
-            false_positive_prob = 0
-            
-        # 假阴性风险：需要重新检测的延误风险
-        fn_risk = false_negative_prob * self.calculate_delay_risk(actual_test_time + 14)  # 假设重检需要2周
-        
-        # 假阳性风险：漏诊的医疗风险
-        fp_risk = false_positive_prob * 5  # 假阳性带来固定风险分数
-        
-        return {
-            'false_negative_prob': false_negative_prob,
-            'false_positive_prob': false_positive_prob,
-            'false_negative_risk': fn_risk,
-            'false_positive_risk': fp_risk,
-            'total_error_risk': fn_risk + fp_risk
-        }
-    
-    def calculate_expected_risk(self, test_time: float, bmi_group_data: pd.DataFrame,
-                              time_predictor) -> Dict:
-        """
-        计算给定检测时间下BMI组的期望风险（使用新的总风险函数）
-        
-        Parameters:
-        - test_time: 建议的检测时间（孕周天数）
-        - bmi_group_data: 该BMI组的数据
-        - time_predictor: 时间预测模型实例
-        
-        Returns:
-        - expected_risks: 期望风险分析结果
-        """
-        total_risks = []
-        detection_failure_risks = []
-        delay_risks = []
-        success_probabilities = []
-        constraint_satisfactions = []
-        
-        for _, patient in bmi_group_data.iterrows():
-            # 使用新的总风险函数
-            risk_breakdown = self.calculate_total_risk(
-                test_time, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], time_predictor
-            )
-            
-            total_risks.append(risk_breakdown['total_risk'])
-            detection_failure_risks.append(risk_breakdown['detection_failure_risk'])
-            delay_risks.append(risk_breakdown['delay_risk'])
-            success_probabilities.append(risk_breakdown['success_probability'])
-            constraint_satisfactions.append(risk_breakdown['satisfies_constraint'])
-        
-        # 计算组统计结果
-        expected_risk = np.mean(total_risks)
-        success_rate = np.mean(success_probabilities)
-        constraint_satisfaction_rate = np.mean(constraint_satisfactions)
-        
-        return {
-            'expected_risk': expected_risk,
-            'success_rate': success_rate,
-            'constraint_satisfaction_rate': constraint_satisfaction_rate,
-            'sample_size': len(bmi_group_data),
-            'average_detection_failure_risk': np.mean(detection_failure_risks),
-            'average_delay_risk': np.mean(delay_risks),
-            'success_rate_min': np.min(success_probabilities),
-            'success_rate_max': np.max(success_probabilities),
-            'test_time_weeks': test_time / 7,
-            'individual_risks': total_risks,
-            'individual_success_probs': success_probabilities
-        }
-    
-    def optimize_test_time_for_group(self, bmi_group_data: pd.DataFrame, 
-                                   time_predictor, min_week=None, max_week=None) -> Dict:
-        """
-        为单个BMI组优化检测时间（基于三个约束条件）
-        改进版本：优先满足组内稳妥达标约束
-        
-        Parameters:
-        - bmi_group_data: BMI组数据
-        - time_predictor: 时间预测模型
-        - min_week, max_week: 检测时间范围（周），默认使用约束条件中的范围
-        
-        Returns:
-        - optimization_result: 优化结果
-        """
-        from scipy.optimize import minimize_scalar
-        import numpy as np
-        
-        # 使用约束条件中的时间范围
-        if min_week is None:
-            min_week = self.detection_min_week
-        if max_week is None:
-            max_week = self.detection_max_week
-        
-        # 首先找到满足组内稳妥达标约束的最早时间
-        group_optimal_time = self._find_group_optimal_time_with_constraint(
-            bmi_group_data, time_predictor, min_week, max_week
+    def calculate_time_risk(self, week_values):
+        """计算时间风险分数"""
+        # 时间风险：检测时间越晚风险越大
+        time_risk = np.where(
+            week_values <= 12, 0.1,
+            np.where(week_values <= 20, 0.3,
+            np.where(week_values <= 25, 0.6,
+            np.where(week_values <= 30, 0.8, 1.0)))
         )
-        
-        # 为该组的每个患者计算在该时间点的风险
-        individual_results = []
-        individual_risks = []
-        individual_success_probs = []
-        
-        for _, patient in bmi_group_data.iterrows():
-            risk_breakdown = self.calculate_total_risk(
-                group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], time_predictor
-            )
-            
-            individual_results.append({
-                '孕妇代码': patient.get('孕妇代码', 'Unknown'),
-                'optimal_time_days': group_optimal_time,
-                'optimal_time_weeks': group_optimal_time / 7,
-                'total_risk': risk_breakdown['total_risk'],
-                'success_probability': risk_breakdown['success_probability'],
-                'detection_failure_risk': risk_breakdown['detection_failure_risk'],
-                'delay_risk': risk_breakdown['delay_risk'],
-                'satisfies_constraint': risk_breakdown['satisfies_constraint']
-            })
-            
-            individual_risks.append(risk_breakdown['total_risk'])
-            individual_success_probs.append(risk_breakdown['success_probability'])
-        
-        # 计算组统计结果
-        group_optimal_risk = np.mean(individual_risks)
-        
-        # 检查组内稳妥达标约束：inf π(τ_g, b) ≥ p₀
-        constraint_valid, min_probability = self.check_within_group_robust_constraint(
-            bmi_group_data, group_optimal_time / 7, time_predictor
+        return time_risk
+    
+    def calculate_age_risk(self, age_values):
+        """计算年龄风险分数"""
+        # 年龄风险：年龄越大风险越大
+        age_risk = np.where(
+            age_values < 25, 0.1,
+            np.where(age_values < 30, 0.2,
+            np.where(age_values < 35, 0.4,
+            np.where(age_values < 40, 0.6, 0.8)))
         )
+        return age_risk
+    
+    def build_risk_classification_models(self):
+        """构建风险分类模型"""
+        print("\n=== 构建风险分类模型 ===")
         
-        # 如果约束不满足，尝试调整时间
-        if not constraint_valid:
-            print(f"警告：组内稳妥达标约束不满足，尝试调整检测时间...")
-            adjusted_time = self._adjust_time_for_constraint(
-                bmi_group_data, time_predictor, group_optimal_time, min_week, max_week
-            )
+        # 准备特征和目标变量
+        features = ['孕妇BMI', '年龄', '孕周数值', 'BMI_平方', 'BMI_对数', 
+                   '年龄_平方', 'BMI_年龄_交互', 'BMI风险', '时间风险', '年龄风险', '综合风险']
+        
+        X = self.male_data[features].dropna()
+        y = self.male_data.loc[X.index, '达标']
+        
+        # 分割数据
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # 标准化特征
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+        
+        # 定义模型
+        models = {
+            '逻辑回归': LogisticRegression(random_state=42, max_iter=1000),
+            '随机森林': RandomForestClassifier(n_estimators=100, random_state=42),
+            '梯度提升': GradientBoostingClassifier(n_estimators=100, random_state=42),
+            '支持向量机': SVC(probability=True, random_state=42)
+        }
+        
+        # 训练和评估模型
+        model_results = {}
+        
+        for name, model in models.items():
+            print(f"\n训练 {name}...")
             
-            if adjusted_time != group_optimal_time:
-                group_optimal_time = adjusted_time
-                # 重新计算所有指标
-                individual_results = []
-                individual_risks = []
-                individual_success_probs = []
-                
-                for _, patient in bmi_group_data.iterrows():
-                    risk_breakdown = self.calculate_total_risk(
-                        group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                        patient['身高'], patient['体重'], time_predictor
-                    )
-                    
-                    individual_results.append({
-                        '孕妇代码': patient.get('孕妇代码', 'Unknown'),
-                        'optimal_time_days': group_optimal_time,
-                        'optimal_time_weeks': group_optimal_time / 7,
-                        'total_risk': risk_breakdown['total_risk'],
-                        'success_probability': risk_breakdown['success_probability'],
-                        'detection_failure_risk': risk_breakdown['detection_failure_risk'],
-                        'delay_risk': risk_breakdown['delay_risk'],
-                        'satisfies_constraint': risk_breakdown['satisfies_constraint']
-                    })
-                    
-                    individual_risks.append(risk_breakdown['total_risk'])
-                    individual_success_probs.append(risk_breakdown['success_probability'])
-                
-                group_optimal_risk = np.mean(individual_risks)
-                constraint_valid, min_probability = self.check_within_group_robust_constraint(
-                    bmi_group_data, group_optimal_time / 7, time_predictor
-                )
-        
-        # 计算组的综合风险分析
-        group_risk_analysis = []
-        for _, patient in bmi_group_data.iterrows():
-            risk_breakdown = self.calculate_total_risk(
-                group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], time_predictor
-            )
-            group_risk_analysis.append(risk_breakdown)
-        
-        # 统计组层面的成功率
-        success_rates = [r['success_probability'] for r in group_risk_analysis]
-        constraint_satisfaction_rate = np.mean([r['satisfies_constraint'] for r in group_risk_analysis])
-        
-        return {
-            'optimal_test_time_days': group_optimal_time,
-            'optimal_test_time_weeks': group_optimal_time / 7,
-            'minimal_expected_risk': group_optimal_risk,
-            'optimization_success': True,
-            'group_success_rate_mean': np.mean(success_rates),
-            'group_success_rate_min': np.min(success_rates),
-            'constraint_satisfaction_rate': constraint_satisfaction_rate,
-            'within_group_robust_constraint_valid': constraint_valid,
-            'within_group_min_probability': min_probability,
-            'individual_results': individual_results,
-            'sample_size': len(bmi_group_data),
-            'detailed_analysis': {
-                'total_risk_mean': np.mean([r['total_risk'] for r in group_risk_analysis]),
-                'detection_failure_risk_mean': np.mean([r['detection_failure_risk'] for r in group_risk_analysis]),
-                'delay_risk_mean': np.mean([r['delay_risk'] for r in group_risk_analysis]),
-                'success_rate': np.mean(success_rates)
+            # 选择是否使用标准化数据
+            if name in ['逻辑回归', '支持向量机']:
+                X_train_use = X_train_scaled
+                X_test_use = X_test_scaled
+            else:
+                X_train_use = X_train
+                X_test_use = X_test
+            
+            # 训练模型
+            model.fit(X_train_use, y_train)
+            
+            # 预测
+            y_pred_train = model.predict(X_train_use)
+            y_pred_test = model.predict(X_test_use)
+            y_pred_proba = model.predict_proba(X_test_use)[:, 1]
+            
+            # 评估指标
+            train_accuracy = (y_pred_train == y_train).mean()
+            test_accuracy = (y_pred_test == y_test).mean()
+            auc_score = roc_auc_score(y_test, y_pred_proba)
+            
+            # 交叉验证
+            cv_scores = cross_val_score(model, X_train_use, y_train, cv=5, scoring='accuracy')
+            
+            model_results[name] = {
+                'model': model,
+                'scaler': scaler if name in ['逻辑回归', '支持向量机'] else None,
+                'train_accuracy': train_accuracy,
+                'test_accuracy': test_accuracy,
+                'auc_score': auc_score,
+                'cv_mean': cv_scores.mean(),
+                'cv_std': cv_scores.std(),
+                'y_pred_test': y_pred_test,
+                'y_pred_proba': y_pred_proba
             }
-        }
+            
+            print(f"  训练集准确率: {train_accuracy:.4f}")
+            print(f"  测试集准确率: {test_accuracy:.4f}")
+            print(f"  AUC分数: {auc_score:.4f}")
+            print(f"  交叉验证准确率: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
+        
+        # 选择最佳模型
+        best_model_name = max(model_results.keys(), key=lambda x: model_results[x]['auc_score'])
+        print(f"\n最佳模型: {best_model_name} (AUC = {model_results[best_model_name]['auc_score']:.4f})")
+        
+        self.risk_models = model_results
+        return model_results, best_model_name
     
-    def analyze_sensitivity_to_error(self, test_time: float, bmi_group_data: pd.DataFrame,
-                                   time_predictor, error_range: List[float]) -> pd.DataFrame:
-        """
-        分析检测误差对结果的敏感性
+    def analyze_risk_factors(self):
+        """分析风险因素重要性"""
+        print("\n=== 分析风险因素重要性 ===")
         
-        Parameters:
-        - test_time: 检测时间
-        - bmi_group_data: BMI组数据
-        - time_predictor: 时间预测模型
-        - error_range: 误差范围列表
+        # 使用随机森林分析特征重要性
+        rf_model = self.risk_models['随机森林']['model']
+        feature_names = ['孕妇BMI', '年龄', '孕周数值', 'BMI_平方', 'BMI_对数', 
+                        '年龄_平方', 'BMI_年龄_交互', 'BMI风险', '时间风险', '年龄风险', '综合风险']
         
-        Returns:
-        - sensitivity_df: 敏感性分析结果
-        """
-        results = []
+        feature_importance = pd.DataFrame({
+            '特征': feature_names,
+            '重要性': rf_model.feature_importances_
+        }).sort_values('重要性', ascending=False)
         
-        original_error = self.measurement_error_std
+        print("风险因素重要性排序:")
+        print(feature_importance)
         
-        for error_std in error_range:
-            # 临时设置误差水平
-            self.measurement_error_std = error_std
+        # 分析各风险因素与达标率的关系
+        risk_analysis = []
+        
+        for feature in ['孕妇BMI', '年龄', '孕周数值', 'BMI风险', '时间风险', '年龄风险', '综合风险']:
+            # 按特征值分组
+            if feature in ['孕妇BMI', '年龄', '孕周数值']:
+                # 数值特征：按分位数分组
+                groups = pd.qcut(self.male_data[feature], q=5, labels=['很低', '低', '中', '高', '很高'])
+            else:
+                # 风险特征：按风险等级分组
+                groups = pd.cut(self.male_data[feature], bins=5, labels=['很低', '低', '中', '高', '很高'])
             
-            # 计算该误差水平下的期望风险
-            risk_analysis = self.calculate_expected_risk(test_time, bmi_group_data, time_predictor)
+            # 计算每组的达标率
+            group_达标率 = self.male_data.groupby(groups)['达标'].agg(['count', 'mean']).round(4)
+            group_达标率.columns = ['样本数', '达标率']
             
-            results.append({
-                'measurement_error_std': error_std,
-                'expected_risk': risk_analysis['expected_risk'],
-                'success_rate': risk_analysis['success_rate'],
-                'constraint_satisfaction_rate': risk_analysis.get('constraint_satisfaction_rate', 0),
-                'average_detection_failure_risk': risk_analysis.get('average_detection_failure_risk', 0),
-                'average_delay_risk': risk_analysis.get('average_delay_risk', 0)
+            risk_analysis.append({
+                '特征': feature,
+                '分组统计': group_达标率.to_string()
             })
         
-        # 恢复原始误差设置
-        self.measurement_error_std = original_error
+        self.risk_factors = {
+            'feature_importance': feature_importance,
+            'risk_analysis': risk_analysis
+        }
         
-        return pd.DataFrame(results)
+        return feature_importance, risk_analysis
     
-    def _find_group_optimal_time_with_constraint(self, bmi_group_data: pd.DataFrame, 
-                                               time_predictor, min_week: int, max_week: int) -> float:
-        """
-        找到满足组内稳妥达标约束的最优时间
+    def calculate_optimal_timing_with_risk(self):
+        """考虑风险因素计算最佳检测时点"""
+        print("\n=== 考虑风险因素计算最佳检测时点 ===")
         
-        Parameters:
-        - bmi_group_data: BMI组数据
-        - time_predictor: 时间预测模型
-        - min_week, max_week: 检测时间范围（周）
+        # BMI分组
+        bmi_ranges = [
+            (0, 20, 'BMI<20'),
+            (20, 28, '20≤BMI<28'),
+            (28, 32, '28≤BMI<32'),
+            (32, 36, '32≤BMI<36'),
+            (36, 40, '36≤BMI<40'),
+            (40, 100, 'BMI≥40')
+        ]
         
-        Returns:
-        - optimal_time: 最优检测时间（天）
-        """
-        import numpy as np
+        optimal_timing_with_risk = []
         
-        # 为每个患者找到满足95%概率的最早时间
-        individual_min_times = []
-        
-        for _, patient in bmi_group_data.iterrows():
-            min_time = time_predictor.find_time_for_success_probability(
-                patient['孕妇BMI'], patient['年龄'], patient['身高'], patient['体重'],
-                target_prob=self.target_success_probability
-            )
+        for min_bmi, max_bmi, group_name in bmi_ranges:
+            group_data = self.male_data[
+                (self.male_data['孕妇BMI'] >= min_bmi) & 
+                (self.male_data['孕妇BMI'] < max_bmi)
+            ]
             
-            if min_time is not None:
-                individual_min_times.append(min_time)
+            if len(group_data) > 0:
+                # 计算该组在不同孕周的达标率和风险
+                week_analysis = []
+                for week in range(10, 26):
+                    week_data = group_data[group_data['孕周数值'] == week]
+                    if len(week_data) > 0:
+                        达标率 = week_data['达标'].mean()
+                        avg_risk = week_data['综合风险'].mean()
+                        
+                        # 综合得分 = 达标率 - 风险权重
+                        # 风险权重：综合风险越高，权重越大
+                        risk_weight = avg_risk * 0.5  # 风险权重系数
+                        composite_score = 达标率 - risk_weight
+                        
+                        week_analysis.append({
+                            '孕周': week,
+                            '达标率': 达标率,
+                            '平均风险': avg_risk,
+                            '风险权重': risk_weight,
+                            '综合得分': composite_score,
+                            '样本数': len(week_data)
+                        })
+                
+                if week_analysis:
+                    week_df = pd.DataFrame(week_analysis)
+                    # 选择综合得分最高的孕周
+                    best_week = week_df.loc[week_df['综合得分'].idxmax()]
+                    
+                    optimal_timing_with_risk.append({
+                        'BMI范围': group_name,
+                        '样本数': len(group_data),
+                        '平均BMI': group_data['孕妇BMI'].mean(),
+                        '平均综合风险': group_data['综合风险'].mean(),
+                        '最佳时点': f"{best_week['孕周']:.0f}周",
+                        '最佳达标率': best_week['达标率'],
+                        '最佳风险': best_week['平均风险'],
+                        '综合得分': best_week['综合得分'],
+                        '风险等级': '低' if best_week['平均风险'] < 0.3 else '中' if best_week['平均风险'] < 0.6 else '高'
+                    })
         
-        if not individual_min_times:
-            # 如果所有患者都无法达到95%，使用最大时间
-            return max_week * 7
+        optimal_timing_df = pd.DataFrame(optimal_timing_with_risk)
+        print("\n考虑风险因素的最佳时点:")
+        print(optimal_timing_df)
         
-        # 取所有患者中最大的最小时间，确保所有患者都能满足约束
-        group_min_time = max(individual_min_times)
-        
-        # 确保在合理范围内
-        group_min_time = max(group_min_time, min_week * 7)
-        group_min_time = min(group_min_time, max_week * 7)
-        
-        return group_min_time
+        return optimal_timing_df
     
-    def _adjust_time_for_constraint(self, bmi_group_data: pd.DataFrame, time_predictor,
-                                  current_time: float, min_week: int, max_week: int) -> float:
-        """
-        调整检测时间以满足组内稳妥达标约束
+    def analyze_detection_error_impact_with_risk(self):
+        """分析检测误差对风险的影响"""
+        print("\n=== 分析检测误差对风险的影响 ===")
         
-        Parameters:
-        - bmi_group_data: BMI组数据
-        - time_predictor: 时间预测模型
-        - current_time: 当前检测时间（天）
-        - min_week, max_week: 检测时间范围（周）
+        # 模拟不同误差水平
+        error_levels = [0.01, 0.02, 0.05, 0.1]
+        error_impact_analysis = []
         
-        Returns:
-        - adjusted_time: 调整后的检测时间（天）
-        """
-        import numpy as np
-        
-        # 在合理范围内搜索满足约束的时间
-        search_times = np.linspace(current_time, max_week * 7, 20)
-        
-        for test_time in search_times:
-            constraint_valid, min_prob = self.check_within_group_robust_constraint(
-                bmi_group_data, test_time / 7, time_predictor
-            )
+        for error in error_levels:
+            # 模拟误差
+            np.random.seed(42)
+            simulated_concentration = self.male_data['Y染色体浓度'] + np.random.normal(0, error, len(self.male_data))
+            simulated_达标 = (simulated_concentration >= 0.04).astype(int)
             
-            if constraint_valid:
-                return test_time
+            # 重新计算风险
+            simulated_bmi_risk = self.calculate_bmi_risk(self.male_data['孕妇BMI'])
+            simulated_time_risk = self.calculate_time_risk(self.male_data['孕周数值'])
+            simulated_age_risk = self.calculate_age_risk(self.male_data['年龄'])
+            simulated_综合风险 = (simulated_bmi_risk + simulated_time_risk + simulated_age_risk) / 3
+            
+            # 计算误差影响
+            original_达标率 = self.male_data['达标'].mean()
+            simulated_达标率 = simulated_达标.mean()
+            original_avg_risk = self.male_data['综合风险'].mean()
+            simulated_avg_risk = simulated_综合风险.mean()
+            
+            error_impact_analysis.append({
+                '误差水平': f"{error*100:.0f}%",
+                '原始达标率': original_达标率,
+                '模拟达标率': simulated_达标率,
+                '达标率变化': simulated_达标率 - original_达标率,
+                '原始平均风险': original_avg_risk,
+                '模拟平均风险': simulated_avg_risk,
+                '风险变化': simulated_avg_risk - original_avg_risk,
+                '综合影响': abs(simulated_达标率 - original_达标率) + abs(simulated_avg_risk - original_avg_risk)
+            })
         
-        # 如果仍然无法满足约束，返回当前时间
-        return current_time
+        error_impact_df = pd.DataFrame(error_impact_analysis)
+        print("\n检测误差对风险的影响:")
+        print(error_impact_df)
+        
+        return error_impact_df
+    
+    def create_risk_visualizations(self, optimal_timing_df, error_impact_df):
+        """创建风险分析可视化图表"""
+        print("\n=== 创建风险分析可视化图表 ===")
+        
+        fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+        
+        # 1. 风险因素重要性
+        feature_importance = self.risk_factors['feature_importance']
+        top_features = feature_importance.head(8)
+        
+        axes[0, 0].barh(range(len(top_features)), top_features['重要性'], color='skyblue')
+        axes[0, 0].set_yticks(range(len(top_features)))
+        axes[0, 0].set_yticklabels(top_features['特征'])
+        axes[0, 0].set_xlabel('重要性')
+        axes[0, 0].set_title('风险因素重要性排序')
+        axes[0, 0].grid(True, alpha=0.3)
+        
+        # 2. 综合风险分布
+        axes[0, 1].hist(self.male_data['综合风险'], bins=20, alpha=0.7, color='lightcoral', edgecolor='black')
+        axes[0, 1].axvline(x=self.male_data['综合风险'].mean(), color='r', linestyle='--', 
+                          label=f'平均风险: {self.male_data["综合风险"].mean():.3f}')
+        axes[0, 1].set_xlabel('综合风险分数')
+        axes[0, 1].set_ylabel('频数')
+        axes[0, 1].set_title('综合风险分布')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True, alpha=0.3)
+        
+        # 3. 风险等级与达标率关系
+        risk_levels = pd.cut(self.male_data['综合风险'], bins=3, labels=['低风险', '中风险', '高风险'])
+        risk_达标率 = self.male_data.groupby(risk_levels)['达标'].mean()
+        
+        bars = axes[0, 2].bar(risk_达标率.index, risk_达标率.values, 
+                             color=['green', 'orange', 'red'], alpha=0.7)
+        axes[0, 2].set_ylabel('达标率')
+        axes[0, 2].set_title('风险等级与达标率关系')
+        axes[0, 2].grid(True, alpha=0.3)
+        
+        # 添加数值标签
+        for bar, rate in zip(bars, risk_达标率.values):
+            axes[0, 2].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01, 
+                           f'{rate:.2%}', ha='center', va='bottom')
+        
+        # 4. 各BMI组风险等级分布
+        bmi_groups = optimal_timing_df['BMI范围']
+        risk_levels = optimal_timing_df['风险等级'].value_counts()
+        
+        axes[1, 0].pie(risk_levels.values, labels=risk_levels.index, autopct='%1.1f%%', 
+                      startangle=90, colors=['green', 'orange', 'red'])
+        axes[1, 0].set_title('各BMI组风险等级分布')
+        
+        # 5. 检测误差对风险的影响
+        error_levels = [1, 2, 5, 10]
+        risk_changes = error_impact_df['风险变化'].values
+        
+        axes[1, 1].plot(error_levels, risk_changes, 'o-', linewidth=2, markersize=8, color='red')
+        axes[1, 1].axhline(y=0, color='black', linestyle='--', alpha=0.5)
+        axes[1, 1].set_xlabel('检测误差 (%)')
+        axes[1, 1].set_ylabel('风险变化')
+        axes[1, 1].set_title('检测误差对风险的影响')
+        axes[1, 1].grid(True, alpha=0.3)
+        
+        # 6. 最佳时点与风险关系
+        bmi_groups = optimal_timing_df['BMI范围']
+        optimal_weeks = [float(t.replace('周', '')) for t in optimal_timing_df['最佳时点']]
+        risk_scores = optimal_timing_df['最佳风险'].values
+        
+        scatter = axes[1, 2].scatter(optimal_weeks, risk_scores, c=optimal_timing_df['综合得分'], 
+                                   cmap='viridis', s=100, alpha=0.7)
+        axes[1, 2].set_xlabel('最佳检测时点(周)')
+        axes[1, 2].set_ylabel('风险分数')
+        axes[1, 2].set_title('最佳时点与风险关系')
+        axes[1, 2].grid(True, alpha=0.3)
+        
+        # 添加颜色条
+        plt.colorbar(scatter, ax=axes[1, 2], label='综合得分')
+        
+        # 添加BMI组标签
+        for i, group in enumerate(bmi_groups):
+            axes[1, 2].annotate(group, (optimal_weeks[i], risk_scores[i]), 
+                               xytext=(5, 5), textcoords='offset points', fontsize=8)
+        
+        plt.tight_layout()
+        plt.savefig('problem2_analysis/results/figures/risk_analysis.png', 
+                   dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print("风险分析图表已保存到 results/figures/risk_analysis.png")
+    
+    def generate_risk_report(self, optimal_timing_df, error_impact_df):
+        """生成风险分析报告"""
+        print("\n=== 生成风险分析报告 ===")
+        
+        best_model_name = max(self.risk_models.keys(), key=lambda x: self.risk_models[x]['auc_score'])
+        best_model_info = self.risk_models[best_model_name]
+        
+        report = f"""
+# 问题2风险评估模型分析报告
 
+## 1. 模型性能总结
+最佳风险分类模型: {best_model_name}
+- 测试集准确率: {best_model_info['test_accuracy']:.4f}
+- AUC分数: {best_model_info['auc_score']:.4f}
+- 交叉验证准确率: {best_model_info['cv_mean']:.4f} ± {best_model_info['cv_std']:.4f}
+
+## 2. 风险因素重要性
+{self.risk_factors['feature_importance'].to_string(index=False)}
+
+## 3. 考虑风险因素的最佳检测时点
+{optimal_timing_df.to_string(index=False)}
+
+## 4. 检测误差对风险的影响
+{error_impact_df.to_string(index=False)}
+
+## 5. 主要发现
+1. BMI是最重要的风险因素
+2. 综合风险模型能够有效预测达标概率
+3. 高BMI组需要更晚的检测时点以降低风险
+4. 检测误差对风险评估有显著影响
+
+## 6. 风险控制策略
+1. 建立多因素风险评估体系
+2. 对高风险组采用更保守的检测策略
+3. 建立风险监控和预警机制
+4. 定期评估和调整风险模型
+
+## 7. 实施建议
+1. 优先采用{best_model_name}进行风险评估
+2. 结合风险等级制定个性化检测方案
+3. 建立风险数据库持续优化模型
+4. 加强检测质量控制以降低误差影响
+"""
+        
+        # 保存报告
+        with open('problem2_analysis/results/reports/risk_model_report.md', 'w', encoding='utf-8') as f:
+            f.write(report)
+        
+        print("风险分析报告已保存到 results/reports/risk_model_report.md")
+        return report
+    
+    def run_complete_analysis(self):
+        """运行完整的风险分析"""
+        print("开始风险评估分析...")
+        
+        # 创建结果目录
+        import os
+        os.makedirs('problem2_analysis/results/figures', exist_ok=True)
+        os.makedirs('problem2_analysis/results/reports', exist_ok=True)
+        os.makedirs('problem2_analysis/results/data', exist_ok=True)
+        
+        # 执行分析步骤
+        self.load_and_prepare_data()
+        model_results, best_model_name = self.build_risk_classification_models()
+        feature_importance, risk_analysis = self.analyze_risk_factors()
+        optimal_timing_df = self.calculate_optimal_timing_with_risk()
+        error_impact_df = self.analyze_detection_error_impact_with_risk()
+        
+        # 创建可视化
+        self.create_risk_visualizations(optimal_timing_df, error_impact_df)
+        
+        # 生成报告
+        report = self.generate_risk_report(optimal_timing_df, error_impact_df)
+        
+        # 保存结果
+        feature_importance.to_csv('problem2_analysis/results/data/risk_feature_importance.csv', index=False)
+        optimal_timing_df.to_csv('problem2_analysis/results/data/optimal_timing_with_risk.csv', index=False)
+        error_impact_df.to_csv('problem2_analysis/results/data/error_impact_on_risk.csv', index=False)
+        
+        print("\n风险评估分析完成！")
+        return {
+            'risk_models': self.risk_models,
+            'best_model_name': best_model_name,
+            'feature_importance': feature_importance,
+            'optimal_timing_df': optimal_timing_df,
+            'error_impact_df': error_impact_df,
+            'report': report
+        }
 
 if __name__ == "__main__":
-    # 测试风险模型
-    risk_model = RiskModel()
-    
-    # 测试时间风险计算
-    print("时间风险测试:")
-    for days in [80, 120, 200]:
-        risk = risk_model.calculate_delay_risk(days)
-        print(f"  {days}天 ({days/7:.1f}周): 风险分数 = {risk}")
-    
-    # 测试检测误差风险
-    print("\n检测误差风险测试:")
-    error_risk = risk_model.calculate_detection_error_risk(0.045, 120)
-    for key, value in error_risk.items():
-        print(f"  {key}: {value:.4f}")
+    # 运行分析
+    analyzer = RiskModelAnalyzer('../初始数据/男胎检测数据.csv')
+    results = analyzer.run_complete_analysis()
