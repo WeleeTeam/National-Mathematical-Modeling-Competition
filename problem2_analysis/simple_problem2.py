@@ -345,9 +345,122 @@ class SimpleProblem2Analysis:
         
         print("可视化图表生成完成")
     
+    def analyze_measurement_error_sensitivity(self):
+        """分析检测误差对结果的敏感性"""
+        print(f"\n=== Step 6: 检测误差敏感性分析 ===")
+        
+        error_range = [0.002, 0.003, 0.004, 0.005, 0.006, 0.008, 0.010]
+        sensitivity_results = {}
+        
+        for group_name, group_info in self.analysis_results['bmi_groups'].items():
+            if group_name not in self.analysis_results['optimization_results']:
+                continue
+                
+            print(f"\n分析 {group_name} 的误差敏感性:")
+            
+            # 获取该组的优化检测时间
+            optimal_time_days = self.analysis_results['optimization_results'][group_name]['optimal_test_time_days']
+            
+            # 获取组数据
+            group_patients = group_info['patients']
+            
+            # 进行敏感性分析
+            try:
+                sens_result = self.risk_model.analyze_sensitivity_to_error(
+                    optimal_time_days, group_patients, self.time_predictor, error_range
+                )
+                
+                sensitivity_results[group_name] = sens_result
+                
+                print(f"  - 误差范围: {min(error_range):.3f} - {max(error_range):.3f}")
+                print(f"  - 风险变化: {sens_result['expected_risk'].min():.4f} - {sens_result['expected_risk'].max():.4f}")
+                print(f"  - 成功率变化: {sens_result['success_rate'].min():.3f} - {sens_result['success_rate'].max():.3f}")
+                
+            except Exception as e:
+                print(f"  - 警告: {group_name} 敏感性分析失败: {str(e)}")
+                continue
+        
+        self.analysis_results['sensitivity_results'] = sensitivity_results
+        
+        # 生成敏感性分析总结
+        self._generate_sensitivity_summary(sensitivity_results)
+        
+        return sensitivity_results
+    
+    def _generate_sensitivity_summary(self, sensitivity_results: Dict):
+        """生成敏感性分析总结"""
+        print(f"\n=== 敏感性分析总结 ===")
+        
+        if not sensitivity_results:
+            print("没有可用的敏感性分析结果")
+            return
+        
+        print("各组对测量误差的敏感性:")
+        print("-" * 60)
+        
+        for group_name, sens_data in sensitivity_results.items():
+            if sens_data.empty:
+                continue
+                
+            risk_change = sens_data['expected_risk'].max() - sens_data['expected_risk'].min()
+            success_change = sens_data['success_rate'].max() - sens_data['success_rate'].min()
+            
+            # 判断敏感性等级
+            if risk_change < 0.01:
+                sensitivity_level = "低敏感"
+            elif risk_change < 0.05:
+                sensitivity_level = "中等敏感"
+            else:
+                sensitivity_level = "高敏感"
+            
+            print(f"{group_name}:")
+            print(f"  - 风险变化范围: {risk_change:.4f} ({sensitivity_level})")
+            print(f"  - 成功率变化范围: {success_change:.3f}")
+            print(f"  - 建议: {'标准质控' if sensitivity_level == '低敏感' else '严格质控'}")
+            print()
+    
+    def create_sensitivity_visualizations(self):
+        """创建敏感性分析可视化图表"""
+        print(f"\n=== Step 7: 生成敏感性分析图表 ===")
+        
+        if 'sensitivity_results' not in self.analysis_results:
+            print("没有敏感性分析结果，跳过图表生成")
+            return
+        
+        # 创建保存目录
+        os.makedirs('problem2_simple_results/figures', exist_ok=True)
+        
+        sensitivity_results = self.analysis_results['sensitivity_results']
+        
+        if not sensitivity_results:
+            print("没有可用的敏感性分析数据")
+            return
+        
+        # 合并所有组的敏感性数据
+        all_sensitivity_data = []
+        for group_name, sens_data in sensitivity_results.items():
+            if not sens_data.empty:
+                sens_data_copy = sens_data.copy()
+                sens_data_copy['group_name'] = group_name
+                all_sensitivity_data.append(sens_data_copy)
+        
+        if not all_sensitivity_data:
+            print("没有有效的敏感性分析数据")
+            return
+        
+        combined_sensitivity = pd.concat(all_sensitivity_data, ignore_index=True)
+        
+        # 创建敏感性分析图表
+        fig = self.visualizer.plot_sensitivity_analysis(
+            combined_sensitivity,
+            save_path='problem2_simple_results/figures/检测误差敏感性分析_简单版.png'
+        )
+        
+        print("  ✓ 生成检测误差敏感性分析图")
+    
     def save_results(self):
         """保存分析结果"""
-        print(f"\n=== Step 7: 保存分析结果 ===")
+        print(f"\n=== Step 9: 保存分析结果 ===")
         
         # 创建结果目录
         os.makedirs('problem2_simple_results/data', exist_ok=True)
@@ -373,6 +486,30 @@ class SimpleProblem2Analysis:
                 combined_predictions.to_csv(
                     'problem2_simple_results/data/简单分组预测结果.csv', index=False, encoding='utf-8'
                 )
+        
+        # 保存敏感性分析结果
+        if 'sensitivity_results' in self.analysis_results:
+            sensitivity_data = []
+            for group_name, sens_data in self.analysis_results['sensitivity_results'].items():
+                if not sens_data.empty:
+                    sens_data_copy = sens_data.copy()
+                    sens_data_copy['group_name'] = group_name
+                    sensitivity_data.append(sens_data_copy)
+            
+            if sensitivity_data:
+                combined_sensitivity = pd.concat(sensitivity_data, ignore_index=True)
+                combined_sensitivity.to_csv(
+                    'problem2_simple_results/data/敏感性分析结果.csv', index=False, encoding='utf-8'
+                )
+                
+                # 保存为JSON格式
+                sensitivity_json = {}
+                for group_name, sens_data in self.analysis_results['sensitivity_results'].items():
+                    if not sens_data.empty:
+                        sensitivity_json[group_name] = sens_data.to_dict('records')
+                
+                with open('problem2_simple_results/data/敏感性分析结果.json', 'w', encoding='utf-8') as f:
+                    json.dump(sensitivity_json, f, ensure_ascii=False, indent=2)
         
         # 生成分析报告
         self._generate_simple_report()
@@ -426,9 +563,41 @@ class SimpleProblem2Analysis:
 - **临床建议**: {rec['clinical_advice']}
 """
         
+        # 添加敏感性分析结果
+        if 'sensitivity_results' in self.analysis_results:
+            report_content += f"""
+
+## 4. 敏感性分析结果
+
+### 检测误差影响评估
+
+各组对测量误差（0.002-0.010范围）的敏感性分析：
+
+"""
+            for group_name, sens_data in self.analysis_results['sensitivity_results'].items():
+                if sens_data.empty:
+                    continue
+                    
+                risk_change = sens_data['expected_risk'].max() - sens_data['expected_risk'].min()
+                success_change = sens_data['success_rate'].max() - sens_data['success_rate'].min()
+                
+                if risk_change < 0.01:
+                    sensitivity_level = "低敏感"
+                elif risk_change < 0.05:
+                    sensitivity_level = "中等敏感"
+                else:
+                    sensitivity_level = "高敏感"
+                
+                report_content += f"""
+#### {group_name}
+- **风险变化范围**: {risk_change:.4f} ({sensitivity_level})
+- **成功率变化范围**: {success_change:.3f}
+- **质量控制建议**: {'标准质控流程即可' if sensitivity_level == '低敏感' else '需要更严格的质量控制'}
+"""
+        
         report_content += """
 
-## 4. 主要发现
+## 5. 主要发现
 
 1. **BMI显著影响最佳检测时间**: 高BMI孕妇需要更长时间才能达到Y染色体浓度标准。
 
@@ -436,7 +605,9 @@ class SimpleProblem2Analysis:
 
 3. **风险最小化**: 通过优化检测时间，可以显著降低孕妇的潜在风险。
 
-## 5. 临床应用建议
+4. **误差敏感性**: 不同BMI组对测量误差的敏感性存在差异，需要针对性的质量控制策略。
+
+## 6. 临床应用建议
 
 1. **分组检测**: 根据BMI进行简单分组，采用不同的检测时点策略。
 
@@ -445,6 +616,8 @@ class SimpleProblem2Analysis:
 3. **风险评估**: 结合个体BMI进行风险评估。
 
 4. **动态调整**: 根据实际检测结果，动态调整后续检测计划。
+
+5. **误差控制**: 根据敏感性分析结果，对不同BMI组采用相应的质量控制标准。
 
 """
         
@@ -473,10 +646,16 @@ class SimpleProblem2Analysis:
             # Step 5: 生成最终建议
             self.generate_final_recommendations()
             
-            # Step 6: 创建可视化
+            # Step 6: 检测误差敏感性分析
+            self.analyze_measurement_error_sensitivity()
+            
+            # Step 7: 创建可视化
             self.create_visualizations()
             
-            # Step 7: 保存结果
+            # Step 8: 创建敏感性分析图表
+            self.create_sensitivity_visualizations()
+            
+            # Step 9: 保存结果
             self.save_results()
             
             print("\n" + "="*50)
