@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9f98d3d5-c6c7-403a-ad6a-d569e95e48fa" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/problem2_analysis/problem2_simple_results/data/敏感性分析结果.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/problem2_analysis/problem2_simple_results/data/敏感性分析结果.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/problem2_analysis/problem2_simple_results/figures/检测误差敏感性分析_简单版.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/reports/问题2分析报告.md" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/reports/问题2分析报告.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_simple_results/reports/问题2简化分析报告.md" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_simple_results/reports/问题2简化分析报告.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/problem2_analysis/simple_problem2.py" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/simple_problem2.py" afterDir="false" />
-    </list>
+    <list default="true" id="9f98d3d5-c6c7-403a-ad6a-d569e95e48fa" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -80,7 +72,7 @@
       <updated>1757176306455</updated>
       <workItem from="1757176307535" duration="2949000" />
       <workItem from="1757180003039" duration="959000" />
-      <workItem from="1757183172316" duration="662000" />
+      <workItem from="1757183172316" duration="964000" />
     </task>
     <servers />
   </component>
