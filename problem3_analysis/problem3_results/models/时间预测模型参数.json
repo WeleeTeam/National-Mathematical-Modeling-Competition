@@ -1,0 +1,31 @@
+{
+  "model_type": "TimePredictionModelProblem3",
+  "parameters": {
+    "measurement_error_std": 0.005,
+    "individual_effect_std": 0.01,
+    "threshold": 0.04,
+    "model_params": {
+      "intercept": 0.044276,
+      "gestational_days": -0.000568,
+      "bmi_centered": 0.000459,
+      "gd_bmi_interaction": 1.6e-05,
+      "age_centered": -0.000537,
+      "gd_age_interaction": -2e-06,
+      "height": 0.001113,
+      "weight": -0.001463,
+      "x_concentration": -0.495231,
+      "y_z_score": -0.013853,
+      "x_z_score": -0.00016,
+      "chr18_z_score": -2e-06,
+      "blood_draw_num": 0.010511,
+      "gd_y_z_interaction": 0.000129,
+      "gd_x_conc_interaction": 0.006594
+    },
+    "center_params": {
+      "bmi_mean": 32.32,
+      "age_mean": 29.5,
+      "height_mean": 160.0,
+      "weight_mean": 80.0
+    }
+  }
+}

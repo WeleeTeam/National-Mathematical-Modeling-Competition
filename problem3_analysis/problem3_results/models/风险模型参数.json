@@ -1,0 +1,28 @@
+{
+  "model_type": "RiskModelProblem3",
+  "parameters": {
+    "target_success_probability": 0.95,
+    "measurement_error_std": 0.005,
+    "individual_effect_std": 0.01,
+    "multifactor_weights": {
+      "bmi": 0.25,
+      "age": 0.15,
+      "height": 0.1,
+      "weight": 0.15,
+      "quality": 0.15,
+      "x_conc": 0.1,
+      "y_z": 0.05,
+      "x_z": 0.02,
+      "chr18_z": 0.03
+    },
+    "delay_risk_params": {
+      "early_base": 0.1,
+      "early_slope": 0.02,
+      "medium_base": 0.5,
+      "medium_slope": 0.08,
+      "late_base": 2.0,
+      "late_slope": 0.2,
+      "multifactor_modifier": 1.2
+    }
+  }
+}

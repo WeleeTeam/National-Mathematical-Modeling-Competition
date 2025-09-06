@@ -1,0 +1,1679 @@
+{
+  "error_sensitivity": {
+    "Group_3": {
+      "low": [
+        {
+          "error_std": 0.001,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.002,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.003,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        }
+      ],
+      "medium": [
+        {
+          "error_std": 0.004,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.005,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.006,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        }
+      ],
+      "high": [
+        {
+          "error_std": 0.008,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.01,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.015,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        },
+        {
+          "error_std": 0.02,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825,
+          "success_rate": 0.9996487933311832,
+          "success_rate_std": 0.001306011358925794
+        }
+      ]
+    },
+    "Group_4": {
+      "low": [
+        {
+          "error_std": 0.001,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.002,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.003,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        }
+      ],
+      "medium": [
+        {
+          "error_std": 0.004,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.005,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.006,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        }
+      ],
+      "high": [
+        {
+          "error_std": 0.008,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.01,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.015,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        },
+        {
+          "error_std": 0.02,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956,
+          "success_rate": 0.9996699250829852,
+          "success_rate_std": 0.0005502539656935332
+        }
+      ]
+    },
+    "Group_5": {
+      "low": [
+        {
+          "error_std": 0.001,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.002,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.003,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        }
+      ],
+      "medium": [
+        {
+          "error_std": 0.004,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.005,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.006,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        }
+      ],
+      "high": [
+        {
+          "error_std": 0.008,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.01,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.015,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        },
+        {
+          "error_std": 0.02,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478,
+          "success_rate": 0.9996689708352354,
+          "success_rate_std": 0.0004802808490754961
+        }
+      ]
+    },
+    "Group_2": {
+      "low": [
+        {
+          "error_std": 0.001,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.002,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.003,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        }
+      ],
+      "medium": [
+        {
+          "error_std": 0.004,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.005,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.006,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        }
+      ],
+      "high": [
+        {
+          "error_std": 0.008,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.01,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.015,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        },
+        {
+          "error_std": 0.02,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052,
+          "success_rate": 0.9996730853641467,
+          "success_rate_std": 0.00044921340081603613
+        }
+      ]
+    },
+    "Group_1": {
+      "low": [
+        {
+          "error_std": 0.001,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.002,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.003,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        }
+      ],
+      "medium": [
+        {
+          "error_std": 0.004,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.005,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.006,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        }
+      ],
+      "high": [
+        {
+          "error_std": 0.008,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.01,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.015,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        },
+        {
+          "error_std": 0.02,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554,
+          "success_rate": 0.9996811709208069,
+          "success_rate_std": 0.0005439253054808021
+        }
+      ]
+    }
+  },
+  "gestational_sensitivity": {
+    "Group_3": [
+      {
+        "week_offset": -3,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 0.8390701906894764,
+        "risk_std": 0.7190061619942444,
+        "success_rate": 0.9449053262218707,
+        "success_rate_std": 0.06789242434044536
+      },
+      {
+        "week_offset": -2,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 0.8390701906894764,
+        "risk_std": 0.7190061619942444,
+        "success_rate": 0.9449053262218707,
+        "success_rate_std": 0.06789242434044536
+      },
+      {
+        "week_offset": -1,
+        "test_time_days": 71.50100508960224,
+        "test_time_weeks": 10.214429298514606,
+        "expected_risk": 0.571668205502448,
+        "risk_std": 0.46963332518376416,
+        "success_rate": 0.9724197791590943,
+        "success_rate_std": 0.04416332991370255
+      },
+      {
+        "week_offset": 0,
+        "test_time_days": 78.50100508960224,
+        "test_time_weeks": 11.214429298514606,
+        "expected_risk": 0.3189371818050554,
+        "risk_std": 0.01895368669881825,
+        "success_rate": 0.9996487933311832,
+        "success_rate_std": 0.001306011358925794
+      },
+      {
+        "week_offset": 1,
+        "test_time_days": 85.50100508960224,
+        "test_time_weeks": 12.214429298514606,
+        "expected_risk": 0.5028545654265669,
+        "risk_std": 0.010878445351219419,
+        "success_rate": 0.999999547489191,
+        "success_rate_std": 2.2680456437219836e-06
+      },
+      {
+        "week_offset": 2,
+        "test_time_days": 92.50100508960224,
+        "test_time_weeks": 13.214429298514606,
+        "expected_risk": 0.5806370329822375,
+        "risk_std": 0.01254456004395992,
+        "success_rate": 0.9999999999650785,
+        "success_rate_std": 1.9121613735571897e-10
+      },
+      {
+        "week_offset": 3,
+        "test_time_days": 99.50100508960224,
+        "test_time_weeks": 14.214429298514606,
+        "expected_risk": 0.658424229653037,
+        "risk_std": 0.014225137291138064,
+        "success_rate": 1.0,
+        "success_rate_std": 7.508823111545772e-16
+      }
+    ],
+    "Group_4": [
+      {
+        "week_offset": -3,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 1.0478894466650917,
+        "risk_std": 0.7110797342112332,
+        "success_rate": 0.9244899671968648,
+        "success_rate_std": 0.06852933919686068
+      },
+      {
+        "week_offset": -2,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 1.0478894466650917,
+        "risk_std": 0.7110797342112332,
+        "success_rate": 0.9244899671968648,
+        "success_rate_std": 0.06852933919686068
+      },
+      {
+        "week_offset": -1,
+        "test_time_days": 71.81877243764605,
+        "test_time_weeks": 10.259824633949435,
+        "expected_risk": 0.632355249896485,
+        "risk_std": 0.3703927103584095,
+        "success_rate": 0.9666890382974129,
+        "success_rate_std": 0.035406424880490325
+      },
+      {
+        "week_offset": 0,
+        "test_time_days": 78.81877243764605,
+        "test_time_weeks": 11.259824633949435,
+        "expected_risk": 0.32124992276955117,
+        "risk_std": 0.013541943609074956,
+        "success_rate": 0.9996699250829852,
+        "success_rate_std": 0.0005502539656935332
+      },
+      {
+        "week_offset": 1,
+        "test_time_days": 85.81877243764605,
+        "test_time_weeks": 12.259824633949435,
+        "expected_risk": 0.5091169523255724,
+        "risk_std": 0.014393195941485564,
+        "success_rate": 0.9999997521716375,
+        "success_rate_std": 5.456304466166062e-07
+      },
+      {
+        "week_offset": 2,
+        "test_time_days": 92.81877243764605,
+        "test_time_weeks": 13.259824633949435,
+        "expected_risk": 0.5873215179129804,
+        "risk_std": 0.016600302466483367,
+        "success_rate": 0.9999999999885025,
+        "success_rate_std": 2.9989210919249506e-11
+      },
+      {
+        "week_offset": 3,
+        "test_time_days": 99.81877243764605,
+        "test_time_weeks": 14.259824633949435,
+        "expected_risk": 0.665528606033105,
+        "risk_std": 0.018810780320823013,
+        "success_rate": 1.0,
+        "success_rate_std": 8.418682910850739e-17
+      }
+    ],
+    "Group_5": [
+      {
+        "week_offset": -3,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 0.8450960660987284,
+        "risk_std": 0.44184922393829834,
+        "success_rate": 0.9439908646382371,
+        "success_rate_std": 0.04277453165549448
+      },
+      {
+        "week_offset": -2,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 0.8450960660987284,
+        "risk_std": 0.44184922393829834,
+        "success_rate": 0.9439908646382371,
+        "success_rate_std": 0.04277453165549448
+      },
+      {
+        "week_offset": -1,
+        "test_time_days": 70.92272910670961,
+        "test_time_weeks": 10.131818443815659,
+        "expected_risk": 0.6506031393327235,
+        "risk_std": 0.3137609728651613,
+        "success_rate": 0.9640274099720244,
+        "success_rate_std": 0.030269915924407982
+      },
+      {
+        "week_offset": 0,
+        "test_time_days": 77.92272910670961,
+        "test_time_weeks": 11.131818443815659,
+        "expected_risk": 0.3181676952538216,
+        "risk_std": 0.010297523027136478,
+        "success_rate": 0.9996689708352354,
+        "success_rate_std": 0.0004802808490754961
+      },
+      {
+        "week_offset": 1,
+        "test_time_days": 84.92272910670961,
+        "test_time_weeks": 12.131818443815659,
+        "expected_risk": 0.49825155396812326,
+        "risk_std": 0.009306027214687101,
+        "success_rate": 0.9999997602194799,
+        "success_rate_std": 4.669102077414191e-07
+      },
+      {
+        "week_offset": 2,
+        "test_time_days": 91.92272910670961,
+        "test_time_weeks": 13.131818443815659,
+        "expected_risk": 0.5763223714499105,
+        "risk_std": 0.010760029787364346,
+        "success_rate": 0.9999999999886565,
+        "success_rate_std": 2.5409926540025983e-11
+      },
+      {
+        "week_offset": 3,
+        "test_time_days": 98.92272910670961,
+        "test_time_weeks": 14.131818443815659,
+        "expected_risk": 0.6543955962086213,
+        "risk_std": 0.012217669023751798,
+        "success_rate": 1.0,
+        "success_rate_std": 7.984667951577998e-17
+      }
+    ],
+    "Group_2": [
+      {
+        "week_offset": -3,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 1.5133107099846066,
+        "risk_std": 0.91130647549734,
+        "success_rate": 0.880129161854584,
+        "success_rate_std": 0.0867460904082305
+      },
+      {
+        "week_offset": -2,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 1.5133107099846066,
+        "risk_std": 0.91130647549734,
+        "success_rate": 0.880129161854584,
+        "success_rate_std": 0.0867460904082305
+      },
+      {
+        "week_offset": -1,
+        "test_time_days": 72.85110092838516,
+        "test_time_weeks": 10.407300132626451,
+        "expected_risk": 0.6632228042719825,
+        "risk_std": 0.34020386695116195,
+        "success_rate": 0.9649367922208492,
+        "success_rate_std": 0.032064822491708056
+      },
+      {
+        "week_offset": 0,
+        "test_time_days": 79.85110092838516,
+        "test_time_weeks": 11.407300132626451,
+        "expected_risk": 0.3294991789547342,
+        "risk_std": 0.012278841743858052,
+        "success_rate": 0.9996730853641467,
+        "success_rate_std": 0.00044921340081603613
+      },
+      {
+        "week_offset": 1,
+        "test_time_days": 86.85110092838516,
+        "test_time_weeks": 12.407300132626451,
+        "expected_risk": 0.5293396041366787,
+        "risk_std": 0.013550093214659125,
+        "success_rate": 0.9999997709007971,
+        "success_rate_std": 4.0830311991202394e-07
+      },
+      {
+        "week_offset": 2,
+        "test_time_days": 93.85110092838516,
+        "test_time_weeks": 13.407300132626451,
+        "expected_risk": 0.6088495428790035,
+        "risk_std": 0.015582192712218534,
+        "success_rate": 0.9999999999896813,
+        "success_rate_std": 2.16012064558627e-11
+      },
+      {
+        "week_offset": 3,
+        "test_time_days": 100.85110092838516,
+        "test_time_weeks": 14.407300132626451,
+        "expected_risk": 0.6883618424376629,
+        "risk_std": 0.017617138613811135,
+        "success_rate": 1.0,
+        "success_rate_std": 7.021666937153402e-17
+      }
+    ],
+    "Group_1": [
+      {
+        "week_offset": -3,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 3.4849376751605314,
+        "risk_std": 1.8211868126281119,
+        "success_rate": 0.6976272261776048,
+        "success_rate_std": 0.16615750540168076
+      },
+      {
+        "week_offset": -2,
+        "test_time_days": 70.0,
+        "test_time_weeks": 10.0,
+        "expected_risk": 3.4849376751605314,
+        "risk_std": 1.8211868126281119,
+        "success_rate": 0.6976272261776048,
+        "success_rate_std": 0.16615750540168076
+      },
+      {
+        "week_offset": -1,
+        "test_time_days": 75.75822563478883,
+        "test_time_weeks": 10.822603662112689,
+        "expected_risk": 0.7057111423985658,
+        "risk_std": 0.40026441813954056,
+        "success_rate": 0.9641172071421567,
+        "success_rate_std": 0.036136678674380085
+      },
+      {
+        "week_offset": 0,
+        "test_time_days": 82.75822563478883,
+        "test_time_weeks": 11.822603662112689,
+        "expected_risk": 0.3489538389633931,
+        "risk_std": 0.01343779945680554,
+        "success_rate": 0.9996811709208069,
+        "success_rate_std": 0.0005439253054808021
+      },
+      {
+        "week_offset": 1,
+        "test_time_days": 89.75822563478883,
+        "test_time_weeks": 12.822603662112689,
+        "expected_risk": 0.5810889158822111,
+        "risk_std": 0.014547323645915822,
+        "success_rate": 0.9999998071227143,
+        "success_rate_std": 4.5806567820251734e-07
+      },
+      {
+        "week_offset": 2,
+        "test_time_days": 96.75822563478883,
+        "test_time_weeks": 13.822603662112689,
+        "expected_risk": 0.6632470773149153,
+        "risk_std": 0.016600793497594628,
+        "success_rate": 0.9999999999935836,
+        "success_rate_std": 1.808641848016846e-11
+      },
+      {
+        "week_offset": 3,
+        "test_time_days": 103.75822563478883,
+        "test_time_weeks": 14.822603662112689,
+        "expected_risk": 0.7454073200872566,
+        "risk_std": 0.018657229463798407,
+        "success_rate": 1.0,
+        "success_rate_std": 2.6539406435475002e-17
+      }
+    ]
+  },
+  "constraint_sensitivity": {
+    "Group_3": [
+      {
+        "target_probability": 0.85,
+        "optimal_time_days": 78.50100833248302,
+        "optimal_time_weeks": 11.21442976178329,
+        "minimal_risk": 0.31893718180506125,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.9,
+        "optimal_time_days": 78.50100833248302,
+        "optimal_time_weeks": 11.21442976178329,
+        "minimal_risk": 0.31893718180506125,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.95,
+        "optimal_time_days": 78.50100833248302,
+        "optimal_time_weeks": 11.21442976178329,
+        "minimal_risk": 0.31893718180506125,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.98,
+        "optimal_time_days": 78.50100833248302,
+        "optimal_time_weeks": 11.21442976178329,
+        "minimal_risk": 0.31893718180506125,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.99,
+        "optimal_time_days": 78.50100833248302,
+        "optimal_time_weeks": 11.21442976178329,
+        "minimal_risk": 0.31893718180506125,
+        "actual_success_rate": 1.0
+      }
+    ],
+    "Group_4": [
+      {
+        "target_probability": 0.85,
+        "optimal_time_days": 78.81878638250079,
+        "optimal_time_weeks": 11.259826626071542,
+        "minimal_risk": 0.32124992276953374,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.9,
+        "optimal_time_days": 78.81878638250079,
+        "optimal_time_weeks": 11.259826626071542,
+        "minimal_risk": 0.32124992276953374,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.95,
+        "optimal_time_days": 78.81878638250079,
+        "optimal_time_weeks": 11.259826626071542,
+        "minimal_risk": 0.32124992276953374,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.98,
+        "optimal_time_days": 78.81878638250079,
+        "optimal_time_weeks": 11.259826626071542,
+        "minimal_risk": 0.32124992276953374,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.99,
+        "optimal_time_days": 78.81878638250079,
+        "optimal_time_weeks": 11.259826626071542,
+        "minimal_risk": 0.32124992276953374,
+        "actual_success_rate": 1.0
+      }
+    ],
+    "Group_5": [
+      {
+        "target_probability": 0.85,
+        "optimal_time_days": 77.92273044144939,
+        "optimal_time_weeks": 11.13181863449277,
+        "minimal_risk": 0.31816769525384425,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.9,
+        "optimal_time_days": 77.92273044144939,
+        "optimal_time_weeks": 11.13181863449277,
+        "minimal_risk": 0.31816769525384425,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.95,
+        "optimal_time_days": 77.92273044144939,
+        "optimal_time_weeks": 11.13181863449277,
+        "minimal_risk": 0.31816769525384425,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.98,
+        "optimal_time_days": 77.92273044144939,
+        "optimal_time_weeks": 11.13181863449277,
+        "minimal_risk": 0.31816769525384425,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.99,
+        "optimal_time_days": 77.92273044144939,
+        "optimal_time_weeks": 11.13181863449277,
+        "minimal_risk": 0.31816769525384425,
+        "actual_success_rate": 1.0
+      }
+    ],
+    "Group_2": [
+      {
+        "target_probability": 0.85,
+        "optimal_time_days": 79.8510854413472,
+        "optimal_time_weeks": 11.407297920192457,
+        "minimal_risk": 0.329499178954812,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.9,
+        "optimal_time_days": 79.8510854413472,
+        "optimal_time_weeks": 11.407297920192457,
+        "minimal_risk": 0.329499178954812,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.95,
+        "optimal_time_days": 79.8510854413472,
+        "optimal_time_weeks": 11.407297920192457,
+        "minimal_risk": 0.329499178954812,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.98,
+        "optimal_time_days": 79.8510854413472,
+        "optimal_time_weeks": 11.407297920192457,
+        "minimal_risk": 0.329499178954812,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.99,
+        "optimal_time_days": 79.8510854413472,
+        "optimal_time_weeks": 11.407297920192457,
+        "minimal_risk": 0.329499178954812,
+        "actual_success_rate": 1.0
+      }
+    ],
+    "Group_1": [
+      {
+        "target_probability": 0.85,
+        "optimal_time_days": 82.75821966372715,
+        "optimal_time_weeks": 11.822602809103879,
+        "minimal_risk": 0.3489538389632966,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.9,
+        "optimal_time_days": 82.75821966372715,
+        "optimal_time_weeks": 11.822602809103879,
+        "minimal_risk": 0.3489538389632966,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.95,
+        "optimal_time_days": 82.75821966372715,
+        "optimal_time_weeks": 11.822602809103879,
+        "minimal_risk": 0.3489538389632966,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.98,
+        "optimal_time_days": 82.75821966372715,
+        "optimal_time_weeks": 11.822602809103879,
+        "minimal_risk": 0.3489538389632966,
+        "actual_success_rate": 1.0
+      },
+      {
+        "target_probability": 0.99,
+        "optimal_time_days": 82.75821966372715,
+        "optimal_time_weeks": 11.822602809103879,
+        "minimal_risk": 0.3489538389632966,
+        "actual_success_rate": 1.0
+      }
+    ]
+  },
+  "weight_sensitivity": {
+    "Group_3": {
+      "bmi": [
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.35,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        }
+      ],
+      "age": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        }
+      ],
+      "height": [
+        {
+          "weight": 0.05,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        }
+      ],
+      "weight": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3189371818050554,
+          "risk_std": 0.01895368669881825
+        }
+      ]
+    },
+    "Group_4": {
+      "bmi": [
+        {
+          "weight": 0.15,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.35,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        }
+      ],
+      "age": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        }
+      ],
+      "height": [
+        {
+          "weight": 0.05,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.1,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        }
+      ],
+      "weight": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.32124992276955117,
+          "risk_std": 0.013541943609074956
+        }
+      ]
+    },
+    "Group_5": {
+      "bmi": [
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.35,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        }
+      ],
+      "age": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        }
+      ],
+      "height": [
+        {
+          "weight": 0.05,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        }
+      ],
+      "weight": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3181676952538216,
+          "risk_std": 0.010297523027136478
+        }
+      ]
+    },
+    "Group_2": {
+      "bmi": [
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.35,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        }
+      ],
+      "age": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        }
+      ],
+      "height": [
+        {
+          "weight": 0.05,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        }
+      ],
+      "weight": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3294991789547342,
+          "risk_std": 0.012278841743858052
+        }
+      ]
+    },
+    "Group_1": {
+      "bmi": [
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.35,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        }
+      ],
+      "age": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        }
+      ],
+      "height": [
+        {
+          "weight": 0.05,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        }
+      ],
+      "weight": [
+        {
+          "weight": 0.1,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.15,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.2,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.25,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        },
+        {
+          "weight": 0.3,
+          "expected_risk": 0.3489538389633931,
+          "risk_std": 0.01343779945680554
+        }
+      ]
+    }
+  },
+  "sample_sensitivity": {
+    "Group_3": [],
+    "Group_4": [],
+    "Group_5": [],
+    "Group_2": [],
+    "Group_1": []
+  },
+  "individual_sensitivity": {
+    "Group_3": [
+      {
+        "variation_factor": 0.5,
+        "individual_std": 0.005,
+        "expected_risk": 0.3189371818050554,
+        "risk_std": 0.01895368669881825,
+        "success_rate": 0.9996487933311832,
+        "success_rate_std": 0.001306011358925794
+      },
+      {
+        "variation_factor": 0.8,
+        "individual_std": 0.008,
+        "expected_risk": 0.3189371818050554,
+        "risk_std": 0.01895368669881825,
+        "success_rate": 0.9996487933311832,
+        "success_rate_std": 0.001306011358925794
+      },
+      {
+        "variation_factor": 1.0,
+        "individual_std": 0.01,
+        "expected_risk": 0.3189371818050554,
+        "risk_std": 0.01895368669881825,
+        "success_rate": 0.9996487933311832,
+        "success_rate_std": 0.001306011358925794
+      },
+      {
+        "variation_factor": 1.2,
+        "individual_std": 0.012,
+        "expected_risk": 0.3189371818050554,
+        "risk_std": 0.01895368669881825,
+        "success_rate": 0.9996487933311832,
+        "success_rate_std": 0.001306011358925794
+      },
+      {
+        "variation_factor": 1.5,
+        "individual_std": 0.015,
+        "expected_risk": 0.3189371818050554,
+        "risk_std": 0.01895368669881825,
+        "success_rate": 0.9996487933311832,
+        "success_rate_std": 0.001306011358925794
+      }
+    ],
+    "Group_4": [
+      {
+        "variation_factor": 0.5,
+        "individual_std": 0.005,
+        "expected_risk": 0.32124992276955117,
+        "risk_std": 0.013541943609074956,
+        "success_rate": 0.9996699250829852,
+        "success_rate_std": 0.0005502539656935332
+      },
+      {
+        "variation_factor": 0.8,
+        "individual_std": 0.008,
+        "expected_risk": 0.32124992276955117,
+        "risk_std": 0.013541943609074956,
+        "success_rate": 0.9996699250829852,
+        "success_rate_std": 0.0005502539656935332
+      },
+      {
+        "variation_factor": 1.0,
+        "individual_std": 0.01,
+        "expected_risk": 0.32124992276955117,
+        "risk_std": 0.013541943609074956,
+        "success_rate": 0.9996699250829852,
+        "success_rate_std": 0.0005502539656935332
+      },
+      {
+        "variation_factor": 1.2,
+        "individual_std": 0.012,
+        "expected_risk": 0.32124992276955117,
+        "risk_std": 0.013541943609074956,
+        "success_rate": 0.9996699250829852,
+        "success_rate_std": 0.0005502539656935332
+      },
+      {
+        "variation_factor": 1.5,
+        "individual_std": 0.015,
+        "expected_risk": 0.32124992276955117,
+        "risk_std": 0.013541943609074956,
+        "success_rate": 0.9996699250829852,
+        "success_rate_std": 0.0005502539656935332
+      }
+    ],
+    "Group_5": [
+      {
+        "variation_factor": 0.5,
+        "individual_std": 0.005,
+        "expected_risk": 0.3181676952538216,
+        "risk_std": 0.010297523027136478,
+        "success_rate": 0.9996689708352354,
+        "success_rate_std": 0.0004802808490754961
+      },
+      {
+        "variation_factor": 0.8,
+        "individual_std": 0.008,
+        "expected_risk": 0.3181676952538216,
+        "risk_std": 0.010297523027136478,
+        "success_rate": 0.9996689708352354,
+        "success_rate_std": 0.0004802808490754961
+      },
+      {
+        "variation_factor": 1.0,
+        "individual_std": 0.01,
+        "expected_risk": 0.3181676952538216,
+        "risk_std": 0.010297523027136478,
+        "success_rate": 0.9996689708352354,
+        "success_rate_std": 0.0004802808490754961
+      },
+      {
+        "variation_factor": 1.2,
+        "individual_std": 0.012,
+        "expected_risk": 0.3181676952538216,
+        "risk_std": 0.010297523027136478,
+        "success_rate": 0.9996689708352354,
+        "success_rate_std": 0.0004802808490754961
+      },
+      {
+        "variation_factor": 1.5,
+        "individual_std": 0.015,
+        "expected_risk": 0.3181676952538216,
+        "risk_std": 0.010297523027136478,
+        "success_rate": 0.9996689708352354,
+        "success_rate_std": 0.0004802808490754961
+      }
+    ],
+    "Group_2": [
+      {
+        "variation_factor": 0.5,
+        "individual_std": 0.005,
+        "expected_risk": 0.3294991789547342,
+        "risk_std": 0.012278841743858052,
+        "success_rate": 0.9996730853641467,
+        "success_rate_std": 0.00044921340081603613
+      },
+      {
+        "variation_factor": 0.8,
+        "individual_std": 0.008,
+        "expected_risk": 0.3294991789547342,
+        "risk_std": 0.012278841743858052,
+        "success_rate": 0.9996730853641467,
+        "success_rate_std": 0.00044921340081603613
+      },
+      {
+        "variation_factor": 1.0,
+        "individual_std": 0.01,
+        "expected_risk": 0.3294991789547342,
+        "risk_std": 0.012278841743858052,
+        "success_rate": 0.9996730853641467,
+        "success_rate_std": 0.00044921340081603613
+      },
+      {
+        "variation_factor": 1.2,
+        "individual_std": 0.012,
+        "expected_risk": 0.3294991789547342,
+        "risk_std": 0.012278841743858052,
+        "success_rate": 0.9996730853641467,
+        "success_rate_std": 0.00044921340081603613
+      },
+      {
+        "variation_factor": 1.5,
+        "individual_std": 0.015,
+        "expected_risk": 0.3294991789547342,
+        "risk_std": 0.012278841743858052,
+        "success_rate": 0.9996730853641467,
+        "success_rate_std": 0.00044921340081603613
+      }
+    ],
+    "Group_1": [
+      {
+        "variation_factor": 0.5,
+        "individual_std": 0.005,
+        "expected_risk": 0.3489538389633931,
+        "risk_std": 0.01343779945680554,
+        "success_rate": 0.9996811709208069,
+        "success_rate_std": 0.0005439253054808021
+      },
+      {
+        "variation_factor": 0.8,
+        "individual_std": 0.008,
+        "expected_risk": 0.3489538389633931,
+        "risk_std": 0.01343779945680554,
+        "success_rate": 0.9996811709208069,
+        "success_rate_std": 0.0005439253054808021
+      },
+      {
+        "variation_factor": 1.0,
+        "individual_std": 0.01,
+        "expected_risk": 0.3489538389633931,
+        "risk_std": 0.01343779945680554,
+        "success_rate": 0.9996811709208069,
+        "success_rate_std": 0.0005439253054808021
+      },
+      {
+        "variation_factor": 1.2,
+        "individual_std": 0.012,
+        "expected_risk": 0.3489538389633931,
+        "risk_std": 0.01343779945680554,
+        "success_rate": 0.9996811709208069,
+        "success_rate_std": 0.0005439253054808021
+      },
+      {
+        "variation_factor": 1.5,
+        "individual_std": 0.015,
+        "expected_risk": 0.3489538389633931,
+        "risk_std": 0.01343779945680554,
+        "success_rate": 0.9996811709208069,
+        "success_rate_std": 0.0005439253054808021
+      }
+    ]
+  }
+}
