@@ -57,8 +57,13 @@ class Problem2CompleteAnalysis:
         self.processed_data = None
         self.unique_patients = None
         
-        # 初始化各个模块
-        self.time_predictor = TimePredictionModel()
+        # 获取第一问处理好的数据路径
+        self.problem1_data_path = os.path.join(
+            os.path.dirname(__file__), "..", "problem1_analysis", "results", "data", "processed_data.csv"
+        )
+        
+        # 初始化各个模块（按新思路简化）
+        self.time_predictor = TimePredictionModel(self.problem1_data_path)  # 自动拟合简化模型
         self.risk_model = RiskModel()
         self.decision_tree = DecisionTreeGrouping(max_groups=5, min_samples_per_group=20)
         self.visualizer = Problem2Visualizer()
@@ -99,11 +104,11 @@ class Problem2CompleteAnalysis:
         # 批量预测传统达标时间
         prediction_results = self.time_predictor.batch_predict_达标时间(self.unique_patients)
         
-        # 为每个患者计算满足95%概率约束的时间
+        # 为每个患者计算满足95%概率约束的时间（简化版本）
         constraint_results = []
         for _, patient in self.unique_patients.iterrows():
             constraint_time = self.time_predictor.find_time_for_success_probability(
-                patient['孕妇BMI'], patient['年龄'], patient['身高'], patient['体重'],
+                bmi=patient['孕妇BMI'],  # 只需要BMI参数
                 target_prob=self.risk_model.target_success_probability
             )
             
@@ -136,11 +141,11 @@ class Problem2CompleteAnalysis:
         return valid_predictions
     
     def optimize_bmi_grouping_with_decision_tree(self):
-        """使用决策树优化BMI分组"""
-        print("\n=== Step 3: 决策树分组优化 ===")
+        """使用简化决策树优化BMI分组"""
+        print("\n=== Step 3: 简化决策树分组优化 ===")
         
-        # 准备决策树特征数据
-        feature_df = self.decision_tree.prepare_features_for_grouping(
+        # 准备简化的决策树特征数据
+        feature_df = self.decision_tree.prepare_simplified_features_for_grouping(
             self.analysis_results['valid_predictions'], 
             self.time_predictor, 
             self.risk_model
@@ -148,35 +153,61 @@ class Problem2CompleteAnalysis:
         
         print(f"特征数据准备完成，共 {len(feature_df)} 个样本")
         
-        # 运行决策树分组优化
-        grouping_result = self.decision_tree.optimize_grouping_with_decision_tree(feature_df)
+        # 运行简化决策树分组优化
+        grouping_result = self.decision_tree.optimize_grouping_with_simplified_decision_tree(feature_df)
         
-        print(f"决策树分组完成:")
-        print(f"  - 最优树深度: {grouping_result['best_depth']}")
-        print(f"  - 交叉验证分数: {grouping_result['best_cv_score']:.4f}")
+        print(f"简化决策树分组完成:")
+        if grouping_result['best_depth'] is not None:
+            print(f"  - 最优树深度: {grouping_result['best_depth']}")
+            print(f"  - 交叉验证分数: {grouping_result['best_cv_score']:.4f}")
         print(f"  - 生成组数: {len(grouping_result['groups'])}")
         
-        # 细化分组边界
-        refined_groups = self.decision_tree.refine_grouping_with_bmi_bounds(feature_df)
+        # 简化分组规则生成（直接从分组结果生成）
+        grouping_rules = []
+        for i, (group_name, group_info) in enumerate(grouping_result['groups'].items()):
+            group_data = group_info['data']
+            bmi_range = grouping_result['group_stats'][group_name]['bmi_range']
+            
+            # 计算期望风险（从group_stats中获取）
+            expected_risk = grouping_result['group_stats'][group_name].get('expected_minimal_risk', 0.1)
+            recommended_time = grouping_result['group_stats'][group_name]['optimal_test_time_mean']
+            
+            rule = {
+                'group_id': i + 1,
+                'group_name': f"BMI组{i+1}",
+                'bmi_lower_bound': bmi_range[0],
+                'bmi_upper_bound': bmi_range[1],
+                'bmi_interval_description': f"[{bmi_range[0]:.1f}, {bmi_range[1]:.1f}]",
+                'sample_size': len(group_data),
+                'recommended_test_time_weeks': recommended_time,
+                'earliest_达标时间_weeks': grouping_result['group_stats'][group_name]['earliest_达标时间_mean'],
+                'constraint_satisfaction_rate': grouping_result['group_stats'][group_name]['constraint_satisfaction_rate'],
+                'expected_risk': expected_risk,
+                'clinical_recommendation': self._get_clinical_recommendation(recommended_time)
+            }
+            grouping_rules.append(rule)
         
-        # 验证BMI分段约束
-        constraint_validation = self.decision_tree.validate_bmi_segmentation_constraints(refined_groups)
-        
-        # 生成分组规则
-        grouping_rules = self.decision_tree.generate_grouping_rules(refined_groups)
-        
-        print(f"\nBMI分组规则:")
+        print(f"\n简化BMI分组规则:")
         for rule in grouping_rules:
             print(f"  {rule['group_name']}: BMI {rule['bmi_interval_description']}, "
-                  f"推荐 {rule['recommended_test_time_weeks']:.1f}周检测, "
+                  f"平均达标 {rule['earliest_达标时间_weeks']:.1f}周, "
+                  f"推荐检测 {rule['recommended_test_time_weeks']:.1f}周, "
                   f"样本数 {rule['sample_size']}")
         
         self.analysis_results['feature_df'] = feature_df
         self.analysis_results['grouping_result'] = grouping_result
-        self.analysis_results['refined_groups'] = refined_groups
         self.analysis_results['grouping_rules'] = grouping_rules
         
         return grouping_rules
+    
+    def _get_clinical_recommendation(self, test_time_weeks: float) -> str:
+        """生成临床建议文本"""
+        if test_time_weeks <= 12:
+            return f"建议在{test_time_weeks:.1f}周检测，属于早期检测，风险较低"
+        elif test_time_weeks <= 18:
+            return f"建议在{test_time_weeks:.1f}周检测，属于中期检测，需要密切关注"
+        else:
+            return f"建议在{test_time_weeks:.1f}周检测，属于中晚期检测，建议提前准备"
     
     def optimize_test_times_for_groups(self):
         """为各BMI组优化检测时间"""
@@ -184,11 +215,14 @@ class Problem2CompleteAnalysis:
         
         optimization_results = {}
         
-        for group_name, group_info in self.analysis_results['refined_groups'].items():
-            print(f"\n优化 {group_name} (BMI: {group_info['bmi_interval']}):")
+        for group_name, group_info in self.analysis_results['grouping_result']['groups'].items():
+            group_stats = self.analysis_results['grouping_result']['group_stats'][group_name]
+            bmi_range = group_stats['bmi_range']
+            
+            print(f"\n优化 {group_name} (BMI: [{bmi_range[0]:.1f}, {bmi_range[1]:.1f}]):")
             
             # 获取该组的数据
-            group_data = group_info['group_data']
+            group_data = group_info['data']
             
             # 转换为原始数据格式用于风险计算
             group_patient_data = []
@@ -199,7 +233,7 @@ class Problem2CompleteAnalysis:
             
             group_patient_df = pd.DataFrame(group_patient_data)
             
-            # 优化该组的检测时间
+            # 优化该组的检测时间（使用原来的方法）
             opt_result = self.risk_model.optimize_test_time_for_group(
                 group_patient_df, self.time_predictor, min_week=10, max_week=22
             )
@@ -221,14 +255,14 @@ class Problem2CompleteAnalysis:
         error_range = [0.002, 0.003, 0.004, 0.005, 0.006, 0.008, 0.010]
         sensitivity_results = {}
         
-        for group_name, group_info in self.analysis_results['refined_groups'].items():
+        for group_name, group_info in self.analysis_results['grouping_result']['groups'].items():
             print(f"\n分析 {group_name} 的误差敏感性:")
             
             # 获取该组的优化检测时间
             optimal_time_days = self.analysis_results['optimization_results'][group_name]['optimal_test_time_days']
             
             # 获取组数据
-            group_data = group_info['group_data']
+            group_data = group_info['data']
             group_patient_data = []
             for _, row in group_data.iterrows():
                 patient_code = row['孕妇代码']
@@ -261,8 +295,11 @@ class Problem2CompleteAnalysis:
         bmi_groups = []
         detection_times = []
         
+        # 获取实际的组名（从grouping_result中）
+        actual_group_names = list(self.analysis_results['grouping_result']['groups'].keys())
+        
         for i, rule in enumerate(self.analysis_results['grouping_rules']):
-            group_name = f"Group_{i+1}"
+            group_name = actual_group_names[i]  # 使用实际的组名
             opt_result = self.analysis_results['optimization_results'][group_name]
             
             # 收集约束检查数据
@@ -398,7 +435,7 @@ class Problem2CompleteAnalysis:
         # 3. 分组结果可视化
         fig3 = self.visualizer.plot_grouping_results(
             self.analysis_results['grouping_rules'],
-            self.analysis_results['refined_groups'],
+            None,  # refined_groups参数在方法中未使用，传递None
             save_path='problem2_results/figures/BMI分组结果.png'
         )
         print("  ✓ 生成BMI分组结果图")
@@ -505,8 +542,8 @@ class Problem2CompleteAnalysis:
         # 保存时间预测模型参数
         time_predictor_params = {
             'model_params': self.time_predictor.model_params,
-            'center_params': self.time_predictor.center_params,
-            'threshold': self.time_predictor.threshold
+            'threshold': self.time_predictor.threshold,
+            'bmi_correlation': getattr(self.time_predictor, 'bmi_correlation', None)
         }
         with open('problem2_results/models/time_prediction_model.json', 'w', encoding='utf-8') as f:
             json.dump(time_predictor_params, f, ensure_ascii=False, indent=2)

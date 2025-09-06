@@ -159,8 +159,7 @@ class RiskModel:
         
         for _, patient in bmi_group_data.iterrows():
             prob = time_predictor.predict_达标概率(
-                detection_time_days, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], 
+                detection_time_days, patient['孕妇BMI'],
                 self.measurement_error_std, self.individual_effect_std
             )
             success_probabilities.append(prob)
@@ -173,22 +172,23 @@ class RiskModel:
         
         return is_valid, min_probability
     
-    def calculate_total_risk(self, gestational_days: float, bmi: float, age: float, 
-                           height: float, weight: float, time_predictor) -> Dict:
+    def calculate_total_risk(self, gestational_days: float, bmi: float, 
+                           time_predictor) -> Dict:
         """
         计算总风险函数 = 检测失败风险 + 延误诊断风险
+        简化版本：只需要gestational_days、bmi和time_predictor参数
         
         Parameters:
         - gestational_days: 孕周天数
-        - bmi, age, height, weight: 患者特征
+        - bmi: BMI值
         - time_predictor: 时间预测模型实例
         
         Returns:
         - risk_breakdown: 风险分解结果
         """
-        # 1. 计算该时间点的检测成功概率
+        # 1. 计算该时间点的检测成功概率（简化版本）
         success_prob = time_predictor.predict_达标概率(
-            gestational_days, bmi, age, height, weight,
+            gestational_days, bmi,
             self.measurement_error_std, self.individual_effect_std
         )
         
@@ -210,6 +210,7 @@ class RiskModel:
             'gestational_weeks': gestational_days / 7,
             'satisfies_constraint': success_prob >= self.target_success_probability
         }
+    
     
     def calculate_detection_error_risk(self, predicted_concentration: float, 
                                      actual_test_time: float) -> Dict:
@@ -275,10 +276,9 @@ class RiskModel:
         constraint_satisfactions = []
         
         for _, patient in bmi_group_data.iterrows():
-            # 使用新的总风险函数
+            # 使用简化的总风险函数
             risk_breakdown = self.calculate_total_risk(
-                test_time, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], time_predictor
+                test_time, patient['孕妇BMI'], time_predictor
             )
             
             total_risks.append(risk_breakdown['total_risk'])
@@ -341,8 +341,7 @@ class RiskModel:
         
         for _, patient in bmi_group_data.iterrows():
             risk_breakdown = self.calculate_total_risk(
-                group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], time_predictor
+                group_optimal_time, patient['孕妇BMI'], time_predictor
             )
             
             individual_results.append({
@@ -383,8 +382,7 @@ class RiskModel:
                 
                 for _, patient in bmi_group_data.iterrows():
                     risk_breakdown = self.calculate_total_risk(
-                        group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                        patient['身高'], patient['体重'], time_predictor
+                        group_optimal_time, patient['孕妇BMI'], time_predictor
                     )
                     
                     individual_results.append({
@@ -410,8 +408,7 @@ class RiskModel:
         group_risk_analysis = []
         for _, patient in bmi_group_data.iterrows():
             risk_breakdown = self.calculate_total_risk(
-                group_optimal_time, patient['孕妇BMI'], patient['年龄'],
-                patient['身高'], patient['体重'], time_predictor
+                group_optimal_time, patient['孕妇BMI'], time_predictor
             )
             group_risk_analysis.append(risk_breakdown)
         
@@ -498,7 +495,7 @@ class RiskModel:
         
         for _, patient in bmi_group_data.iterrows():
             min_time = time_predictor.find_time_for_success_probability(
-                patient['孕妇BMI'], patient['年龄'], patient['身高'], patient['体重'],
+                patient['孕妇BMI'],
                 target_prob=self.target_success_probability
             )
             

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a304445f-20f2-4ee4-8195-8a48f7a2926e" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/decision_tree_grouping.py" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/decision_tree_grouping.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/main_problem2.py" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/main_problem2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/BMI分组规则.csv" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/BMI分组规则.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/决策树特征数据.csv" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/决策树特征数据.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/完整分析结果.json" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/完整分析结果.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/最终临床建议.csv" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/最终临床建议.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/预测达标时间.csv" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/data/预测达标时间.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/BMI分组决策树.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/BMI分组决策树.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/BMI分组结果.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/BMI分组结果.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/检测误差敏感性分析.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/检测误差敏感性分析.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/达标时间_vs_BMI.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/达标时间_vs_BMI.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/问题2综合分析仪表板.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/figures/问题2综合分析仪表板.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/decision_tree_feature_importance.json" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/decision_tree_feature_importance.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/decision_tree_model.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/decision_tree_model.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/optimization_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/optimization_results.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/sensitivity_analysis.json" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/sensitivity_analysis.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/time_prediction_model.json" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/models/time_prediction_model.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/problem2_results/reports/问题2分析报告.md" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/problem2_results/reports/问题2分析报告.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/risk_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/risk_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem2_analysis/time_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/problem2_analysis/time_prediction.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="32Jqaw5Turpgj9JhnD3HvFbhT9D" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.main_problem2.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "Makoto",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.19072.16" />
+        <option value="bundled-python-sdk-8336bb23522e-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.19072.16" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="a304445f-20f2-4ee4-8195-8a48f7a2926e" name="更改" comment="" />
+      <created>1757149095109</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1757149095109</updated>
+      <workItem from="1757149097128" duration="5778000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$main_problem2.coverage" NAME="main_problem2 覆盖结果" MODIFIED="1757156447912" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
+  </component>
+</project>
