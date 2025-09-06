@@ -313,9 +313,8 @@ class Problem1Analysis:
                 
                 print(f"残差标准差: {diagnostics['residuals_std']:.6f}")
                 print(f"残差均值: {diagnostics['residuals_mean']:.6f}")
-            
-            print("模型诊断完成")
-                
+                print("模型诊断完成")
+
             except Exception as e:
                 print(f"模型诊断时出错: {e}")
         else:
@@ -325,10 +324,10 @@ class Problem1Analysis:
         """打印关系模型结果"""
         
         if self.model_analyzer.result is not None:
-        print("\n" + "="*80)
+            print("\n" + "="*80)
             print("增强的随机斜率混合效应模型结果")
-        print("="*80)
-        
+            print("="*80)
+
             # 使用新的方法打印完整结果
             complete_results = self.model_analyzer.print_complete_results(self.processed_data)
             
@@ -422,7 +421,7 @@ class Problem1Analysis:
             print("  ✓ 相关性矩阵已保存: data/enhanced_correlation_matrix.csv")
             
             # 打印主要相关性
-            print("\n  主要相关性预览:")
+            print("\n  关键相关性:")
             y_corr = correlation_matrix['Y染色体浓度'].drop('Y染色体浓度').sort_values(key=abs, ascending=False)
             for var, corr in y_corr.head(10).items():
                 print(f"    {var}: {corr:.4f}")
@@ -459,7 +458,7 @@ class Problem1Analysis:
                 rate_val = y_stats.get('达标率', 'N/A')
                 if isinstance(rate_val, (int, float)):
                     print(f"    达标率: {rate_val:.2%}")
-                    else:
+                else:
                     print(f"    达标率: {rate_val}")
         
         # 保存BMI分组相关性
