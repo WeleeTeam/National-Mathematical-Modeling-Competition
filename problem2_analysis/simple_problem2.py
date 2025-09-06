@@ -315,13 +315,13 @@ class SimpleProblem2Analysis:
         print(f"\n=== Step 6: 生成可视化图表 ===")
         
         # 创建保存目录
-        os.makedirs('../problem2_simple/problem2_simple_results/figures', exist_ok=True)
+        os.makedirs('problem2_simple_results/figures', exist_ok=True)
         
         # 1. BMI分组结果可视化
         if 'bmi_groups' in self.analysis_results:
             fig1 = self.visualizer.plot_simple_bmi_groups(
                 self.analysis_results['bmi_groups'],
-                save_path='../problem2_simple/problem2_simple_results/figures/简单BMI分组结果.png'
+                save_path='problem2_simple_results/figures/简单BMI分组结果.png'
             )
             print("  ✓ 生成简单BMI分组结果图")
         
@@ -339,7 +339,7 @@ class SimpleProblem2Analysis:
                 combined_predictions = pd.concat(all_predictions, ignore_index=True)
                 fig2 = self.visualizer.plot_达标时间_vs_bmi(
                     combined_predictions,
-                    save_path='../problem2_simple/problem2_simple_results/figures/达标时间_vs_BMI_简单版.png'
+                    save_path='problem2_simple_results/figures/达标时间_vs_BMI_简单版.png'
                 )
                 print("  ✓ 生成达标时间vs BMI关系图")
         
@@ -350,13 +350,13 @@ class SimpleProblem2Analysis:
         print(f"\n=== Step 7: 保存分析结果 ===")
         
         # 创建结果目录
-        os.makedirs('../problem2_simple/problem2_simple_results/data', exist_ok=True)
-        os.makedirs('../problem2_simple/problem2_simple_results/reports', exist_ok=True)
+        os.makedirs('problem2_simple_results/data', exist_ok=True)
+        os.makedirs('problem2_simple_results/reports', exist_ok=True)
         
         # 保存最终建议
         if 'final_recommendations' in self.analysis_results:
             pd.DataFrame(self.analysis_results['final_recommendations']).to_csv(
-                '../problem2_simple/problem2_simple_results/data/简单BMI分组建议.csv', index=False, encoding='utf-8'
+                'problem2_simple_results/data/简单BMI分组建议.csv', index=False, encoding='utf-8'
             )
         
         # 保存各组的详细预测结果
@@ -449,7 +449,7 @@ class SimpleProblem2Analysis:
 """
         
         # 保存报告
-        with open('../problem2_simple/problem2_simple_results/reports/问题2简化分析报告.md', 'w', encoding='utf-8') as f:
+        with open('problem2_simple_results/reports/问题2简化分析报告.md', 'w', encoding='utf-8') as f:
             f.write(report_content)
     
     def run_complete_analysis(self):

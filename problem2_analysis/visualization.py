@@ -286,6 +286,63 @@ class Problem2Visualizer:
             
         return fig
     
+    def plot_simple_bmi_groups(self, bmi_groups: Dict, save_path: str = None) -> plt.Figure:
+        """绘制简单BMI分组结果"""
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # 准备数据
+        group_names = []
+        group_sizes = []
+        group_bmi_means = []
+        group_bmi_ranges = []
+        
+        for group_name, group_info in bmi_groups.items():
+            group_names.append(group_name)
+            group_sizes.append(group_info['sample_size'])
+            group_bmi_means.append(group_info['bmi_mean'])
+            group_bmi_ranges.append(group_info['bmi_range'])
+        
+        # 图1：样本数分布
+        bars1 = ax1.bar(group_names, group_sizes, color=self.color_palette[:len(group_names)])
+        ax1.set_title('各BMI组样本数分布', fontsize=14, fontweight='bold', pad=20)
+        ax1.set_xlabel('BMI组别', fontsize=12, fontweight='bold')
+        ax1.set_ylabel('样本数', fontsize=12, fontweight='bold')
+        ax1.grid(True, alpha=0.3)
+        
+        # 在柱状图上添加数值标签
+        for bar, size in zip(bars1, group_sizes):
+            height = bar.get_height()
+            ax1.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+                    f'{size}', ha='center', va='bottom', fontweight='bold')
+        
+        # 图2：BMI均值分布
+        bars2 = ax2.bar(group_names, group_bmi_means, color=self.color_palette[:len(group_names)])
+        ax2.set_title('各BMI组平均BMI值', fontsize=14, fontweight='bold', pad=20)
+        ax2.set_xlabel('BMI组别', fontsize=12, fontweight='bold')
+        ax2.set_ylabel('平均BMI', fontsize=12, fontweight='bold')
+        ax2.grid(True, alpha=0.3)
+        
+        # 在柱状图上添加数值标签
+        for bar, mean_bmi in zip(bars2, group_bmi_means):
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.1,
+                    f'{mean_bmi:.1f}', ha='center', va='bottom', fontweight='bold')
+        
+        # 添加BMI范围信息
+        for i, (group_name, bmi_range) in enumerate(zip(group_names, group_bmi_ranges)):
+            ax2.text(i, group_bmi_means[i] + 0.5, 
+                    f'[{bmi_range[0]}-{bmi_range[1]})', 
+                    ha='center', va='bottom', fontsize=10, 
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=self.dpi, bbox_inches='tight')
+            
+        return fig
+
     def create_comprehensive_dashboard(self, analysis_results: Dict, 
                                      save_path: str = None) -> plt.Figure:
         """创建综合分析仪表板"""
