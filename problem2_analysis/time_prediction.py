@@ -8,7 +8,9 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import fsolve, minimize_scalar
 from scipy import stats
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 from typing import Dict, Tuple, Optional
 import warnings
 warnings.filterwarnings('ignore')
@@ -53,61 +55,79 @@ class TimePredictionModel:
         print(f"相关性显著性检验: t={t_stat:.4f}, p={p_value:.6f}")
         print(f"样本数量: {n}")
         
-        # 2. 拟合简化线性模型：Y浓度 = a + b*孕周 + c*BMI + d*孕周*BMI
-        X = data[['gestational_days', '孕妇BMI']].copy()
-        X['gestational_days_bmi'] = X['gestational_days'] * X['孕妇BMI']  # 交互项
-        X = X.dropna()
-        
+        # 2. 拟合简化随机森林模型：Y浓度 = f(孕周, BMI) [无交互项]
+        # 保留主要特征但去掉交互项，使用保守参数避免过拟合
+        X = data[['gestational_days', '孕妇BMI']].copy().dropna()
         y = data.loc[X.index, 'Y染色体浓度']
         
-        # 使用线性回归拟合
-        model = LinearRegression()
-        model.fit(X, y)
+        # 数据划分（用于更准确的性能评估）
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # 使用保守的随机森林参数避免过拟合
+        model = RandomForestRegressor(
+            n_estimators=30,       # 进一步减少树的数量
+            max_depth=4,           # 限制更小的树深度
+            min_samples_split=20,  # 增加分割所需的最小样本数
+            min_samples_leaf=10,   # 增加叶子节点最小样本数
+            max_features='sqrt',   # 使用sqrt特征数
+            random_state=42,
+            n_jobs=-1
+        )
+        model.fit(X_train, y_train)
         
         self.fitted_model = model
+        self.feature_names = X.columns.tolist()
         
-        # 保存模型参数
+        # 保存模型参数（随机森林的特征重要性）
         self.model_params = {
-            'intercept': model.intercept_,
-            'gestational_days': model.coef_[0],
-            'bmi': model.coef_[1], 
-            'gestational_days_bmi': model.coef_[2]
+            'feature_importance': dict(zip(self.feature_names, model.feature_importances_)),
+            'n_estimators': model.n_estimators,
+            'max_depth': model.max_depth,
+            'min_samples_split': model.min_samples_split,
+            'min_samples_leaf': model.min_samples_leaf
         }
         
         # 模型性能评估
-        r2 = model.score(X, y)
-        y_pred = model.predict(X)
-        rmse = np.sqrt(np.mean((y - y_pred)**2))
+        y_train_pred = model.predict(X_train)
+        y_test_pred = model.predict(X_test)
         
-        print(f"\n=== 简化模型拟合结果 ===")
-        print(f"模型公式: Y = {self.model_params['intercept']:.6f}")
-        print(f"       + {self.model_params['gestational_days']:.6f} * 孕周天数") 
-        print(f"       + {self.model_params['bmi']:.6f} * BMI")
-        print(f"       + {self.model_params['gestational_days_bmi']:.8f} * 孕周天数*BMI")
-        print(f"R² = {r2:.4f}")
-        print(f"RMSE = {rmse:.6f}")
+        r2_train = r2_score(y_train, y_train_pred)
+        r2_test = r2_score(y_test, y_test_pred)
+        rmse_train = np.sqrt(mean_squared_error(y_train, y_train_pred))
+        rmse_test = np.sqrt(mean_squared_error(y_test, y_test_pred))
+        
+        print(f"\n=== 随机森林模型拟合结果 ===")
+        print(f"模型类型: RandomForest (n_estimators={model.n_estimators}, max_depth={model.max_depth})")
+        print("特征重要性:")
+        for feature, importance in self.model_params['feature_importance'].items():
+            print(f"  - {feature}: {importance:.4f}")
+        print(f"训练集 R² = {r2_train:.4f}")
+        print(f"测试集 R² = {r2_test:.4f}")
+        print(f"训练集 RMSE = {rmse_train:.6f}")
+        print(f"测试集 RMSE = {rmse_test:.6f}")
         
         return self.model_params
     def predict_concentration(self, gestational_days: float, bmi: float, 
                             **kwargs) -> float:
         """
-        使用简化模型预测Y染色体浓度
-        新模型只需要gestational_days和bmi两个关键参数
+        使用简化随机森林模型预测Y染色体浓度
+        简化后的模型使用孕周和BMI两个主要特征（无交互项）
         
         Parameters:
         - gestational_days: 孕周天数
         - bmi: BMI值
         """
-        if not self.model_params:
+        if self.fitted_model is None:
             raise ValueError("模型未拟合！请先调用fit_model_from_data()或提供数据路径")
         
-        # 使用简化的线性模型计算浓度
-        concentration = (
-            self.model_params['intercept'] +
-            self.model_params['gestational_days'] * gestational_days +
-            self.model_params['bmi'] * bmi +
-            self.model_params['gestational_days_bmi'] * gestational_days * bmi
-        )
+        # 使用孕周和BMI两个特征（无交互项）
+        features = pd.DataFrame({
+            'gestational_days': [gestational_days],
+            '孕妇BMI': [bmi]
+        })
+        
+        # 使用随机森林模型预测浓度
+        concentration = self.fitted_model.predict(features)[0]
         
         return max(0, concentration)  # 浓度不能为负
     
@@ -116,7 +136,7 @@ class TimePredictionModel:
         求解Y染色体浓度达到4%的最早时间
         简化版本只需要BMI参数
         """
-        if not self.model_params:
+        if self.fitted_model is None:
             raise ValueError("模型未拟合！请先调用fit_model_from_data()或提供数据路径")
         
         def concentration_equation(t):

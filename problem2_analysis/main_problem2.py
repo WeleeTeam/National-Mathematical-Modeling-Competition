@@ -539,11 +539,17 @@ class Problem2CompleteAnalysis:
         
         print("  ✓ 保存时间预测模型参数...")
         
-        # 保存时间预测模型参数
+        # 保存随机森林模型文件
+        if hasattr(self.time_predictor, 'fitted_model') and self.time_predictor.fitted_model is not None:
+            joblib.dump(self.time_predictor.fitted_model, 'problem2_results/models/time_prediction_rf_model.pkl')
+        
+        # 保存随机森林时间预测模型参数
         time_predictor_params = {
+            'model_type': 'RandomForest',
             'model_params': self.time_predictor.model_params,
             'threshold': self.time_predictor.threshold,
-            'bmi_correlation': getattr(self.time_predictor, 'bmi_correlation', None)
+            'bmi_correlation': getattr(self.time_predictor, 'bmi_correlation', None),
+            'feature_names': getattr(self.time_predictor, 'feature_names', None)
         }
         with open('problem2_results/models/time_prediction_model.json', 'w', encoding='utf-8') as f:
             json.dump(time_predictor_params, f, ensure_ascii=False, indent=2)
