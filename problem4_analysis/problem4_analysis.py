@@ -191,7 +191,7 @@ class Problem4Analyzer:
             print(f"\n显著相关特征: {significant_features}")
             
         return correlations
-    
+        
     def calculate_spearman_manual(self, x, y, show_details=False):
         """手动计算Spearman相关系数"""
         from scipy import stats as scipy_stats
@@ -298,14 +298,14 @@ class Problem4Analyzer:
                 corr_value = stats['correlation']
                 if not np.isnan(corr_value):
                     feature_stats[feature]['correlations'].append(corr_value)
-                    feature_stats[feature]['p_values'].append(stats['p_value'])
+                feature_stats[feature]['p_values'].append(stats['p_value'])
                     feature_stats[feature]['valid_groups'] += 1
+                
+                if stats['significant']:
+                    feature_stats[feature]['significant_count'] += 1
                     
-                    if stats['significant']:
-                        feature_stats[feature]['significant_count'] += 1
-                        
                     if abs(corr_value) >= 0.15:  # 强相关阈值（按照图片方案）
-                        feature_stats[feature]['strong_correlation_count'] += 1
+                    feature_stats[feature]['strong_correlation_count'] += 1
         
         # 计算三个维度的得分
         evaluation_scores = {}
@@ -470,15 +470,15 @@ class Problem4Analyzer:
         neural_networks = {
             'NN_Optimized_Deep': MLPClassifier(
                 hidden_layer_sizes=(512, 256, 128, 64, 32),  # 五层更深的网络
-                activation='relu',
-                solver='adam',
+            activation='relu',
+            solver='adam',
                 alpha=0.00005,  # 减少正则化，允许更复杂的学习
                 batch_size=16,  # 减小批次大小，提高学习稳定性
-                learning_rate='adaptive',
+            learning_rate='adaptive',
                 learning_rate_init=0.0005,  # 降低初始学习率
                 max_iter=5000,  # 增加最大迭代次数
-                random_state=42,
-                early_stopping=True,
+            random_state=42,
+            early_stopping=True,
                 validation_fraction=0.15,  # 减少验证集比例，增加训练数据
                 n_iter_no_change=200,  # 增加耐心值
                 beta_1=0.9,  # Adam优化器参数
@@ -580,55 +580,338 @@ class Problem4Analyzer:
         import os
         os.makedirs('problem4_analysis/results', exist_ok=True)
         
-        # 1. 特征重要性图
-        if hasattr(self, 'selected_features'):
-            plt.figure(figsize=(10, 6))
-            plt.bar(range(len(self.selected_features)), [1]*len(self.selected_features))
-            plt.xticks(range(len(self.selected_features)), self.selected_features, rotation=45)
-            plt.title('选定的重要特征')
-            plt.ylabel('特征重要性')
+        # 1. 数据分布可视化
+        self.plot_data_distribution()
+        
+        # 2. BMI分组分析可视化
+        self.plot_bmi_group_analysis()
+        
+        # 3. 特征相关性热图
+        self.plot_correlation_heatmap()
+        
+        # 4. 五步法特征筛选过程可视化
+        self.plot_feature_selection_process()
+        
+        # 5. 模型性能可视化
+        self.plot_model_performance()
+        
+        # 6. 混淆矩阵和分类报告
+        self.plot_confusion_matrix()
+        
+        # 7. 特征重要性分析
+        self.plot_feature_importance()
+        
+        # 8. 预测概率分布
+        self.plot_prediction_distribution()
+        
+        # 9. 学习曲线
+        self.plot_learning_curves()
+        
+        # 10. 综合仪表板
+        self.plot_comprehensive_dashboard()
+        
+        print("所有可视化结果已保存到 problem4_analysis/results/")
+    
+    def plot_data_distribution(self):
+        """数据分布可视化"""
+        print("生成数据分布图...")
+        
+        fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+        fig.suptitle('数据分布分析', fontsize=16, fontweight='bold')
+        
+        # 异常样本分布
+        axes[0, 0].pie([self.data['is_abnormal'].sum(), len(self.data) - self.data['is_abnormal'].sum()], 
+                      labels=['异常', '正常'], autopct='%1.1f%%', colors=['red', 'green'])
+        axes[0, 0].set_title('异常样本分布')
+        
+        # BMI分布
+        axes[0, 1].hist(self.data['孕妇BMI'], bins=30, alpha=0.7, color='skyblue', edgecolor='black')
+        axes[0, 1].set_title('孕妇BMI分布')
+        axes[0, 1].set_xlabel('BMI')
+        axes[0, 1].set_ylabel('频次')
+        
+        # 年龄分布
+        axes[0, 2].hist(self.data['年龄'], bins=20, alpha=0.7, color='lightcoral', edgecolor='black')
+        axes[0, 2].set_title('年龄分布')
+        axes[0, 2].set_xlabel('年龄')
+        axes[0, 2].set_ylabel('频次')
+        
+        # 染色体Z值分布
+        chromosome_z_values = ['13号染色体的Z值', '18号染色体的Z值', '21号染色体的Z值', 'X染色体的Z值']
+        for i, col in enumerate(chromosome_z_values):
+            if i < 2:
+                axes[1, i].hist(self.data[col], bins=30, alpha=0.7, edgecolor='black')
+                axes[1, i].set_title(f'{col}分布')
+                axes[1, i].set_xlabel('Z值')
+                axes[1, i].set_ylabel('频次')
+        
+        # 测序质量指标
+        axes[1, 2].scatter(self.data['原始读段数'], self.data['GC含量'], 
+                          c=self.data['is_abnormal'], cmap='RdYlBu', alpha=0.6)
+        axes[1, 2].set_title('原始读段数 vs GC含量')
+        axes[1, 2].set_xlabel('原始读段数')
+        axes[1, 2].set_ylabel('GC含量')
+        
             plt.tight_layout()
-            plt.savefig('problem4_analysis/results/selected_features.png', dpi=300, bbox_inches='tight')
+        plt.savefig('problem4_analysis/results/data_distribution.png', dpi=300, bbox_inches='tight')
             plt.close()
         
-        # 2. ROC曲线比较
-        if hasattr(self, 'models') and self.models:
-            plt.figure(figsize=(12, 8))
+    def plot_bmi_group_analysis(self):
+        """BMI分组分析可视化"""
+        print("生成BMI分组分析图...")
+        
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        fig.suptitle('BMI分组分析', fontsize=16, fontweight='bold')
+        
+        # BMI组异常比例
+        bmi_groups = self.data.groupby('BMI_group')['is_abnormal'].agg(['count', 'sum', 'mean']).reset_index()
+        bmi_groups.columns = ['BMI组', '总样本数', '异常样本数', '异常比例']
+        
+        axes[0, 0].bar(bmi_groups['BMI组'], bmi_groups['异常比例'], color='lightblue', edgecolor='black')
+        axes[0, 0].set_title('各BMI组异常比例')
+        axes[0, 0].set_ylabel('异常比例')
+        axes[0, 0].tick_params(axis='x', rotation=45)
+        
+        # BMI组样本量分布
+        axes[0, 1].bar(bmi_groups['BMI组'], bmi_groups['总样本数'], color='lightgreen', edgecolor='black')
+        axes[0, 1].set_title('各BMI组样本量')
+        axes[0, 1].set_ylabel('样本数')
+        axes[0, 1].tick_params(axis='x', rotation=45)
+        
+        # BMI与异常关系散点图
+        scatter = axes[1, 0].scatter(self.data['孕妇BMI'], self.data['is_abnormal'], 
+                                   c=self.data['is_abnormal'], cmap='RdYlBu', alpha=0.6)
+        axes[1, 0].set_title('BMI与异常判定关系')
+        axes[1, 0].set_xlabel('孕妇BMI')
+        axes[1, 0].set_ylabel('异常判定 (0=正常, 1=异常)')
+        
+        # BMI组内特征分布箱线图
+        bmi_data = []
+        bmi_labels = []
+        for group in self.data['BMI_group'].unique():
+            if pd.notna(group):
+                group_data = self.data[self.data['BMI_group'] == group]
+                bmi_data.append(group_data['孕妇BMI'])
+                bmi_labels.append(str(group))
+        
+        axes[1, 1].boxplot(bmi_data, labels=bmi_labels)
+        axes[1, 1].set_title('各BMI组BMI值分布')
+        axes[1, 1].set_ylabel('BMI值')
+        axes[1, 1].tick_params(axis='x', rotation=45)
+        
+        plt.tight_layout()
+        plt.savefig('problem4_analysis/results/bmi_group_analysis.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def plot_correlation_heatmap(self):
+        """特征相关性热图"""
+        print("生成特征相关性热图...")
+        
+        # 选择数值特征
+        numeric_features = self.data.select_dtypes(include=[np.number]).columns
+        correlation_matrix = self.data[numeric_features].corr()
+        
+        plt.figure(figsize=(15, 12))
+        mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
+        sns.heatmap(correlation_matrix, mask=mask, annot=True, cmap='RdYlBu_r', center=0,
+                   square=True, linewidths=0.5, cbar_kws={"shrink": 0.8})
+        plt.title('特征相关性热图', fontsize=16, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig('problem4_analysis/results/correlation_heatmap.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def plot_feature_selection_process(self):
+        """五步法特征筛选过程可视化"""
+        print("生成特征筛选过程图...")
+        
+        # 读取特征排名数据
+        if os.path.exists('problem4_analysis/results/feature_ranking.csv'):
+            feature_ranking = pd.read_csv('problem4_analysis/results/feature_ranking.csv', index_col=0)
             
-            # 绘制集成模型的ROC曲线
+            fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+            fig.suptitle('五步法特征筛选过程', fontsize=16, fontweight='bold')
+            
+            # 关联强度
+            axes[0, 0].barh(range(len(feature_ranking)), feature_ranking['association_strength'], 
+                           color='skyblue', edgecolor='black')
+            axes[0, 0].set_yticks(range(len(feature_ranking)))
+            axes[0, 0].set_yticklabels(feature_ranking.index, fontsize=8)
+            axes[0, 0].set_title('关联强度 (S1)')
+            axes[0, 0].set_xlabel('平均相关系数绝对值')
+            
+            # 统计显著性
+            axes[0, 1].barh(range(len(feature_ranking)), feature_ranking['statistical_significance'], 
+                           color='lightcoral', edgecolor='black')
+            axes[0, 1].set_yticks(range(len(feature_ranking)))
+            axes[0, 1].set_yticklabels(feature_ranking.index, fontsize=8)
+            axes[0, 1].set_title('统计显著性 (S2)')
+            axes[0, 1].set_xlabel('显著相关组数比例')
+            
+            # 跨组一致性
+            axes[1, 0].barh(range(len(feature_ranking)), feature_ranking['cross_group_consistency'], 
+                           color='lightgreen', edgecolor='black')
+            axes[1, 0].set_yticks(range(len(feature_ranking)))
+            axes[1, 0].set_yticklabels(feature_ranking.index, fontsize=8)
+            axes[1, 0].set_title('跨组一致性 (S3)')
+            axes[1, 0].set_xlabel('强相关组数比例')
+            
+            # 综合得分
+            axes[1, 1].barh(range(len(feature_ranking)), feature_ranking['comprehensive_score'], 
+                           color='gold', edgecolor='black')
+            axes[1, 1].set_yticks(range(len(feature_ranking)))
+            axes[1, 1].set_yticklabels(feature_ranking.index, fontsize=8)
+            axes[1, 1].set_title('综合得分 (S_i)')
+            axes[1, 1].set_xlabel('综合得分')
+            
+            plt.tight_layout()
+            plt.savefig('problem4_analysis/results/feature_selection_process.png', dpi=300, bbox_inches='tight')
+            plt.close()
+    
+    def plot_model_performance(self):
+        """模型性能可视化"""
+        print("生成模型性能图...")
+        
+        if hasattr(self, 'models') and self.models:
+            fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+            fig.suptitle('模型性能分析', fontsize=16, fontweight='bold')
+            
             for name, result in self.models.items():
                 if 'y_test' in result and 'y_pred_proba' in result:
+                    # ROC曲线
                     fpr, tpr, _ = roc_curve(result['y_test'], result['y_pred_proba'])
-                    plt.plot(fpr, tpr, label=f'{name} (AUC = {result["auc_score"]:.3f})', linewidth=3)
+                    axes[0, 0].plot(fpr, tpr, label=f'{name} (AUC = {result["auc_score"]:.3f})', linewidth=2)
+                    
+                    # 精确率-召回率曲线
+                    from sklearn.metrics import precision_recall_curve
+                    precision, recall, _ = precision_recall_curve(result['y_test'], result['y_pred_proba'])
+                    axes[0, 1].plot(recall, precision, label=f'{name}', linewidth=2)
+                    
+                    # 预测概率分布
+                    axes[1, 0].hist(result['y_pred_proba'][result['y_test'] == 0], 
+                                   bins=20, alpha=0.7, label='正常样本', color='green')
+                    axes[1, 0].hist(result['y_pred_proba'][result['y_test'] == 1], 
+                                   bins=20, alpha=0.7, label='异常样本', color='red')
+                    
+                    # 阈值分析
+                    thresholds = np.linspace(0, 1, 100)
+                    precisions = []
+                    recalls = []
+                    f1_scores = []
+                    
+                    for thresh in thresholds:
+                        y_pred_thresh = (result['y_pred_proba'] > thresh).astype(int)
+                        if len(np.unique(y_pred_thresh)) > 1:
+                            from sklearn.metrics import precision_score, recall_score, f1_score
+                            precisions.append(precision_score(result['y_test'], y_pred_thresh, zero_division=0))
+                            recalls.append(recall_score(result['y_test'], y_pred_thresh, zero_division=0))
+                            f1_scores.append(f1_score(result['y_test'], y_pred_thresh, zero_division=0))
+                        else:
+                            precisions.append(0)
+                            recalls.append(0)
+                            f1_scores.append(0)
+                    
+                    axes[1, 1].plot(thresholds, precisions, label='精确率', linewidth=2)
+                    axes[1, 1].plot(thresholds, recalls, label='召回率', linewidth=2)
+                    axes[1, 1].plot(thresholds, f1_scores, label='F1分数', linewidth=2)
+                    axes[1, 1].axvline(x=result.get('optimal_threshold', 0.5), 
+                                     color='red', linestyle='--', label='最优阈值')
             
-            # 如果有单个模型，也绘制它们的ROC曲线
-            for name, result in self.models.items():
-                if 'individual_models' in result:
-                    for model_name, model in result['individual_models'].items():
-                        try:
-                            y_pred_proba = model.predict_proba(result['y_test'].index.map(lambda x: self.data.loc[x, self.selected_features].values).reshape(-1, len(self.selected_features)))[:, 1]
-                            fpr, tpr, _ = roc_curve(result['y_test'], y_pred_proba)
-                            plt.plot(fpr, tpr, label=f'{model_name} (AUC = {roc_auc_score(result["y_test"], y_pred_proba):.3f})', 
-                                   linewidth=1, alpha=0.7, linestyle='--')
-                        except:
-                            continue
+            # 设置图表属性
+            axes[0, 0].plot([0, 1], [0, 1], 'k--', alpha=0.5)
+            axes[0, 0].set_xlabel('假正率 (FPR)')
+            axes[0, 0].set_ylabel('真正率 (TPR)')
+            axes[0, 0].set_title('ROC曲线')
+            axes[0, 0].legend()
+            axes[0, 0].grid(True, alpha=0.3)
             
-            plt.plot([0, 1], [0, 1], 'k--', label='随机分类器', alpha=0.5)
-            plt.xlabel('假正率 (FPR)')
-            plt.ylabel('真正率 (TPR)')
-            plt.title('集成神经网络 ROC曲线比较')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-            plt.grid(True, alpha=0.3)
+            axes[0, 1].set_xlabel('召回率')
+            axes[0, 1].set_ylabel('精确率')
+            axes[0, 1].set_title('精确率-召回率曲线')
+            axes[0, 1].legend()
+            axes[0, 1].grid(True, alpha=0.3)
+            
+            axes[1, 0].set_xlabel('预测概率')
+            axes[1, 0].set_ylabel('频次')
+            axes[1, 0].set_title('预测概率分布')
+            axes[1, 0].legend()
+            axes[1, 0].grid(True, alpha=0.3)
+            
+            axes[1, 1].set_xlabel('阈值')
+            axes[1, 1].set_ylabel('分数')
+            axes[1, 1].set_title('阈值分析')
+            axes[1, 1].legend()
+            axes[1, 1].grid(True, alpha=0.3)
+            
             plt.tight_layout()
-            plt.savefig('problem4_analysis/results/roc_curves.png', dpi=300, bbox_inches='tight')
+            plt.savefig('problem4_analysis/results/model_performance.png', dpi=300, bbox_inches='tight')
             plt.close()
         
-        # 3. 特征重要性分析
+    def plot_confusion_matrix(self):
+        """混淆矩阵和分类报告可视化"""
+        print("生成混淆矩阵图...")
+        
         if hasattr(self, 'models') and self.models:
-            # 找到第一个有特征重要性的模型
+            fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+            fig.suptitle('分类性能分析', fontsize=16, fontweight='bold')
+            
+            for name, result in self.models.items():
+                if 'y_test' in result and 'y_pred' in result:
+                    # 混淆矩阵
+                    from sklearn.metrics import confusion_matrix
+                    cm = confusion_matrix(result['y_test'], result['y_pred'])
+                    
+                    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                               xticklabels=['正常', '异常'], 
+                               yticklabels=['正常', '异常'],
+                               ax=axes[0])
+                    axes[0].set_title(f'{name} 混淆矩阵')
+                    axes[0].set_xlabel('预测标签')
+                    axes[0].set_ylabel('真实标签')
+                    
+                    # 分类报告可视化
+                    from sklearn.metrics import classification_report
+                    report = classification_report(result['y_test'], result['y_pred'], 
+                                                 target_names=['正常', '异常'], 
+                                                 output_dict=True)
+                    
+                    # 提取指标
+                    metrics = ['precision', 'recall', 'f1-score']
+                    classes = ['正常', '异常']
+                    data = []
+                    for cls in classes:
+                        row = [report[cls][metric] for metric in metrics]
+                        data.append(row)
+                    
+                    im = axes[1].imshow(data, cmap='RdYlGn', aspect='auto', vmin=0, vmax=1)
+                    axes[1].set_xticks(range(len(metrics)))
+                    axes[1].set_yticks(range(len(classes)))
+                    axes[1].set_xticklabels(metrics)
+                    axes[1].set_yticklabels(classes)
+                    axes[1].set_title(f'{name} 分类报告')
+                    
+                    # 添加数值标签
+                    for i in range(len(classes)):
+                        for j in range(len(metrics)):
+                            text = axes[1].text(j, i, f'{data[i][j]:.3f}',
+                                              ha="center", va="center", color="black")
+                    
+                    # 添加颜色条
+                    plt.colorbar(im, ax=axes[1], fraction=0.046, pad=0.04)
+                    break
+            
+            plt.tight_layout()
+            plt.savefig('problem4_analysis/results/confusion_matrix.png', dpi=300, bbox_inches='tight')
+            plt.close()
+    
+    def plot_feature_importance(self):
+        """特征重要性分析"""
+        print("生成特征重要性图...")
+        
+        if hasattr(self, 'models') and self.models:
             for name, result in self.models.items():
                 if result.get('feature_importance') is not None:
-                    plt.figure(figsize=(12, 8))
+                    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+                    fig.suptitle(f'{name} 特征重要性分析', fontsize=16, fontweight='bold')
                     
                     importance = result['feature_importance']
                     features = self.selected_features
@@ -638,51 +921,328 @@ class Problem4Analyzer:
                     sorted_features = [features[i] for i in sorted_idx]
                     sorted_importance = importance[sorted_idx]
                     
-                    # 绘制特征重要性
-                    plt.subplot(2, 1, 1)
-                    bars = plt.barh(range(len(sorted_features)), sorted_importance, 
+                    # 水平条形图
+                    bars = axes[0, 0].barh(range(len(sorted_features)), sorted_importance, 
                                    color='skyblue', edgecolor='black')
-                    plt.yticks(range(len(sorted_features)), sorted_features)
-                    plt.xlabel('特征重要性')
-                    plt.title(f'{name} 特征重要性分析')
-                    plt.gca().invert_yaxis()
+                    axes[0, 0].set_yticks(range(len(sorted_features)))
+                    axes[0, 0].set_yticklabels(sorted_features, fontsize=10)
+                    axes[0, 0].set_xlabel('特征重要性')
+                    axes[0, 0].set_title('特征重要性排序')
+                    axes[0, 0].invert_yaxis()
                     
                     # 添加数值标签
                     for i, bar in enumerate(bars):
                         width = bar.get_width()
-                        plt.text(width, bar.get_y() + bar.get_height()/2,
+                        axes[0, 0].text(width, bar.get_y() + bar.get_height()/2,
                                 f'{width:.3f}', ha='left', va='center')
                     
-                    # 绘制所有模型的特征重要性对比
-                    plt.subplot(2, 1, 2)
-                    model_names = []
-                    importance_data = []
+                    # 饼图（前8个特征）
+                    top_n = min(8, len(sorted_features))
+                    axes[0, 1].pie(sorted_importance[:top_n], labels=sorted_features[:top_n], 
+                                  autopct='%1.1f%%', startangle=90)
+                    axes[0, 1].set_title(f'前{top_n}个重要特征占比')
                     
-                    for model_name, model_result in self.models.items():
-                        if model_result.get('feature_importance') is not None:
-                            model_names.append(model_name)
-                            importance_data.append(model_result['feature_importance'])
+                    # 累积重要性
+                    cumulative_importance = np.cumsum(sorted_importance)
+                    axes[1, 0].plot(range(1, len(cumulative_importance) + 1), cumulative_importance, 
+                                   marker='o', linewidth=2, markersize=6)
+                    axes[1, 0].set_xlabel('特征数量')
+                    axes[1, 0].set_ylabel('累积重要性')
+                    axes[1, 0].set_title('累积特征重要性')
+                    axes[1, 0].grid(True, alpha=0.3)
                     
-                    if importance_data:
-                        importance_array = np.array(importance_data)
-                        x = np.arange(len(features))
-                        width = 0.25
-                        
-                        for i, (name, importance) in enumerate(zip(model_names, importance_data)):
-                            plt.bar(x + i*width, importance, width, label=name, alpha=0.8)
-                        
-                        plt.xlabel('特征')
-                        plt.ylabel('重要性')
-                        plt.title('各模型特征重要性对比')
-                        plt.xticks(x + width, features, rotation=45)
-                        plt.legend()
+                    # 特征重要性分布
+                    axes[1, 1].hist(importance, bins=10, alpha=0.7, color='lightcoral', edgecolor='black')
+                    axes[1, 1].set_xlabel('特征重要性')
+                    axes[1, 1].set_ylabel('频次')
+                    axes[1, 1].set_title('特征重要性分布')
+                    axes[1, 1].grid(True, alpha=0.3)
                     
                     plt.tight_layout()
                     plt.savefig('problem4_analysis/results/feature_importance.png', dpi=300, bbox_inches='tight')
                     plt.close()
                     break
+    
+    def plot_prediction_distribution(self):
+        """预测概率分布可视化"""
+        print("生成预测概率分布图...")
         
-        print("可视化结果已保存到 problem4_analysis/results/")
+        if hasattr(self, 'models') and self.models:
+            fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+            fig.suptitle('预测概率分布分析', fontsize=16, fontweight='bold')
+            
+            for name, result in self.models.items():
+                if 'y_test' in result and 'y_pred_proba' in result:
+                    y_test = result['y_test']
+                    y_pred_proba = result['y_pred_proba']
+                    
+                    # 预测概率分布
+                    axes[0, 0].hist(y_pred_proba[y_test == 0], bins=30, alpha=0.7, 
+                                   label='正常样本', color='green', density=True)
+                    axes[0, 0].hist(y_pred_proba[y_test == 1], bins=30, alpha=0.7, 
+                                   label='异常样本', color='red', density=True)
+                    axes[0, 0].set_xlabel('预测概率')
+                    axes[0, 0].set_ylabel('密度')
+                    axes[0, 0].set_title('预测概率分布')
+                    axes[0, 0].legend()
+                    axes[0, 0].grid(True, alpha=0.3)
+                    
+                    # 预测概率箱线图
+                    data_to_plot = [y_pred_proba[y_test == 0], y_pred_proba[y_test == 1]]
+                    axes[0, 1].boxplot(data_to_plot, labels=['正常', '异常'])
+                    axes[0, 1].set_ylabel('预测概率')
+                    axes[0, 1].set_title('预测概率箱线图')
+                    axes[0, 1].grid(True, alpha=0.3)
+                    
+                    # 预测概率vs真实标签
+                    axes[1, 0].scatter(y_test, y_pred_proba, alpha=0.6, s=20)
+                    axes[1, 0].set_xlabel('真实标签')
+                    axes[1, 0].set_ylabel('预测概率')
+                    axes[1, 0].set_title('预测概率vs真实标签')
+                    axes[1, 0].grid(True, alpha=0.3)
+                    
+                    # 最优阈值线
+                    optimal_threshold = result.get('optimal_threshold', 0.5)
+                    axes[1, 0].axhline(y=optimal_threshold, color='red', linestyle='--', 
+                                     label=f'最优阈值: {optimal_threshold:.3f}')
+                    axes[1, 0].legend()
+                    
+                    # 预测概率分位数分析
+                    normal_quantiles = np.percentile(y_pred_proba[y_test == 0], [25, 50, 75])
+                    abnormal_quantiles = np.percentile(y_pred_proba[y_test == 1], [25, 50, 75])
+                    
+                    x_pos = np.arange(3)
+                    width = 0.35
+                    
+                    axes[1, 1].bar(x_pos - width/2, normal_quantiles, width, 
+                                  label='正常样本', alpha=0.7, color='green')
+                    axes[1, 1].bar(x_pos + width/2, abnormal_quantiles, width, 
+                                  label='异常样本', alpha=0.7, color='red')
+                    
+                    axes[1, 1].set_xlabel('分位数')
+                    axes[1, 1].set_ylabel('预测概率')
+                    axes[1, 1].set_title('预测概率分位数对比')
+                    axes[1, 1].set_xticks(x_pos)
+                    axes[1, 1].set_xticklabels(['25%', '50%', '75%'])
+                    axes[1, 1].legend()
+                    axes[1, 1].grid(True, alpha=0.3)
+                    
+                    break
+                    
+                    plt.tight_layout()
+            plt.savefig('problem4_analysis/results/prediction_distribution.png', dpi=300, bbox_inches='tight')
+                    plt.close()
+    
+    def plot_learning_curves(self):
+        """学习曲线可视化"""
+        print("生成学习曲线图...")
+        
+        if hasattr(self, 'models') and self.models:
+            fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+            fig.suptitle('模型学习分析', fontsize=16, fontweight='bold')
+            
+            for name, result in self.models.items():
+                if 'model' in result and hasattr(result['model'], 'loss_curve_'):
+                    # 损失曲线
+                    if hasattr(result['model'], 'loss_curve_'):
+                        axes[0, 0].plot(result['model'].loss_curve_, label=f'{name} 训练损失')
+                        axes[0, 0].set_xlabel('迭代次数')
+                        axes[0, 0].set_ylabel('损失')
+                        axes[0, 0].set_title('训练损失曲线')
+                        axes[0, 0].legend()
+                        axes[0, 0].grid(True, alpha=0.3)
+                    
+                    # 验证曲线
+                    if hasattr(result['model'], 'validation_scores_'):
+                        axes[0, 1].plot(result['model'].validation_scores_, label=f'{name} 验证分数')
+                        axes[0, 1].set_xlabel('迭代次数')
+                        axes[0, 1].set_ylabel('验证分数')
+                        axes[0, 1].set_title('验证分数曲线')
+                        axes[0, 1].legend()
+                        axes[0, 1].grid(True, alpha=0.3)
+                
+                # 交叉验证分数
+                if 'cv_mean' in result and 'cv_std' in result:
+                    cv_scores = [result['cv_mean']] * 5  # 假设5折交叉验证
+                    cv_errors = [result['cv_std']] * 5
+                    
+                    axes[1, 0].errorbar(range(1, 6), cv_scores, yerr=cv_errors, 
+                                       marker='o', capsize=5, label=f'{name}')
+                    axes[1, 0].set_xlabel('交叉验证折数')
+                    axes[1, 0].set_ylabel('AUC分数')
+                    axes[1, 0].set_title('交叉验证分数')
+                    axes[1, 0].legend()
+                    axes[1, 0].grid(True, alpha=0.3)
+                
+                # 模型复杂度分析
+                if hasattr(result['model'], 'coefs_'):
+                    layer_sizes = [len(coef) for coef in result['model'].coefs_]
+                    axes[1, 1].bar(range(len(layer_sizes)), layer_sizes, 
+                                  alpha=0.7, color='lightblue', edgecolor='black')
+                    axes[1, 1].set_xlabel('层数')
+                    axes[1, 1].set_ylabel('神经元数量')
+                    axes[1, 1].set_title('网络结构')
+                    axes[1, 1].grid(True, alpha=0.3)
+                
+                    break
+        
+            plt.tight_layout()
+            plt.savefig('problem4_analysis/results/learning_curves.png', dpi=300, bbox_inches='tight')
+            plt.close()
+    
+    def plot_comprehensive_dashboard(self):
+        """综合仪表板"""
+        print("生成综合仪表板...")
+        
+        fig = plt.figure(figsize=(20, 16))
+        gs = fig.add_gridspec(4, 4, hspace=0.3, wspace=0.3)
+        fig.suptitle('女胎异常判定分析综合仪表板', fontsize=20, fontweight='bold')
+        
+        # 1. 数据概览 (左上)
+        ax1 = fig.add_subplot(gs[0, 0])
+        total_samples = len(self.data)
+        abnormal_samples = self.data['is_abnormal'].sum()
+        normal_samples = total_samples - abnormal_samples
+        
+        ax1.pie([normal_samples, abnormal_samples], 
+               labels=[f'正常\n{normal_samples}个', f'异常\n{abnormal_samples}个'], 
+               autopct='%1.1f%%', colors=['lightgreen', 'lightcoral'])
+        ax1.set_title('样本分布概览', fontweight='bold')
+        
+        # 2. 模型性能 (右上)
+        ax2 = fig.add_subplot(gs[0, 1])
+        if hasattr(self, 'models') and self.models:
+            for name, result in self.models.items():
+                if 'auc_score' in result:
+                    ax2.bar(name, result['auc_score'], color='skyblue', alpha=0.7)
+                    ax2.text(name, result['auc_score'] + 0.01, f'{result["auc_score"]:.3f}', 
+                           ha='center', va='bottom', fontweight='bold')
+        ax2.set_ylabel('AUC分数')
+        ax2.set_title('模型性能', fontweight='bold')
+        ax2.set_ylim(0, 1)
+        
+        # 3. 特征重要性Top5 (左中)
+        ax3 = fig.add_subplot(gs[0, 2:])
+        if os.path.exists('problem4_analysis/results/feature_ranking.csv'):
+            feature_ranking = pd.read_csv('problem4_analysis/results/feature_ranking.csv', index_col=0)
+            top5_features = feature_ranking.head(5)
+            
+            bars = ax3.barh(range(len(top5_features)), top5_features['comprehensive_score'], 
+                           color='gold', alpha=0.7, edgecolor='black')
+            ax3.set_yticks(range(len(top5_features)))
+            ax3.set_yticklabels(top5_features.index, fontsize=10)
+            ax3.set_xlabel('综合得分')
+            ax3.set_title('Top5重要特征', fontweight='bold')
+            ax3.invert_yaxis()
+            
+            # 添加数值标签
+            for i, bar in enumerate(bars):
+                width = bar.get_width()
+                ax3.text(width, bar.get_y() + bar.get_height()/2,
+                        f'{width:.3f}', ha='left', va='center', fontweight='bold')
+        
+        # 4. BMI分组分析 (中左)
+        ax4 = fig.add_subplot(gs[1, :2])
+        bmi_groups = self.data.groupby('BMI_group')['is_abnormal'].agg(['count', 'mean']).reset_index()
+        bmi_groups.columns = ['BMI组', '样本数', '异常比例']
+        
+        x = np.arange(len(bmi_groups))
+        width = 0.35
+        
+        bars1 = ax4.bar(x - width/2, bmi_groups['样本数'], width, label='样本数', alpha=0.7, color='lightblue')
+        ax4_twin = ax4.twinx()
+        bars2 = ax4_twin.bar(x + width/2, bmi_groups['异常比例'], width, label='异常比例', alpha=0.7, color='lightcoral')
+        
+        ax4.set_xlabel('BMI组')
+        ax4.set_ylabel('样本数', color='blue')
+        ax4_twin.set_ylabel('异常比例', color='red')
+        ax4.set_title('BMI分组分析', fontweight='bold')
+        ax4.set_xticks(x)
+        ax4.set_xticklabels(bmi_groups['BMI组'], rotation=45)
+        
+        # 5. ROC曲线 (中右)
+        ax5 = fig.add_subplot(gs[1, 2:])
+        if hasattr(self, 'models') and self.models:
+            for name, result in self.models.items():
+                if 'y_test' in result and 'y_pred_proba' in result:
+                    fpr, tpr, _ = roc_curve(result['y_test'], result['y_pred_proba'])
+                    ax5.plot(fpr, tpr, label=f'{name} (AUC = {result["auc_score"]:.3f})', linewidth=2)
+        
+        ax5.plot([0, 1], [0, 1], 'k--', alpha=0.5, label='随机分类器')
+        ax5.set_xlabel('假正率 (FPR)')
+        ax5.set_ylabel('真正率 (TPR)')
+        ax5.set_title('ROC曲线', fontweight='bold')
+        ax5.legend()
+        ax5.grid(True, alpha=0.3)
+        
+        # 6. 预测概率分布 (下左)
+        ax6 = fig.add_subplot(gs[2, :2])
+        if hasattr(self, 'models') and self.models:
+            for name, result in self.models.items():
+                if 'y_test' in result and 'y_pred_proba' in result:
+                    y_test = result['y_test']
+                    y_pred_proba = result['y_pred_proba']
+                    
+                    ax6.hist(y_pred_proba[y_test == 0], bins=20, alpha=0.7, 
+                            label='正常样本', color='green', density=True)
+                    ax6.hist(y_pred_proba[y_test == 1], bins=20, alpha=0.7, 
+                            label='异常样本', color='red', density=True)
+                    
+                    # 添加最优阈值线
+                    optimal_threshold = result.get('optimal_threshold', 0.5)
+                    ax6.axvline(x=optimal_threshold, color='black', linestyle='--', 
+                              label=f'最优阈值: {optimal_threshold:.3f}')
+                    break
+        
+        ax6.set_xlabel('预测概率')
+        ax6.set_ylabel('密度')
+        ax6.set_title('预测概率分布', fontweight='bold')
+        ax6.legend()
+        ax6.grid(True, alpha=0.3)
+        
+        # 7. 混淆矩阵 (下右)
+        ax7 = fig.add_subplot(gs[2, 2:])
+        if hasattr(self, 'models') and self.models:
+            for name, result in self.models.items():
+                if 'y_test' in result and 'y_pred' in result:
+                    from sklearn.metrics import confusion_matrix
+                    cm = confusion_matrix(result['y_test'], result['y_pred'])
+                    
+                    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                               xticklabels=['正常', '异常'], 
+                               yticklabels=['正常', '异常'],
+                               ax=ax7)
+                    ax7.set_title(f'{name} 混淆矩阵', fontweight='bold')
+                    ax7.set_xlabel('预测标签')
+                    ax7.set_ylabel('真实标签')
+                    break
+        
+        # 8. 技术指标总结 (底部)
+        ax8 = fig.add_subplot(gs[3, :])
+        ax8.axis('off')
+        
+        # 创建技术指标表格
+        if hasattr(self, 'models') and self.models:
+            for name, result in self.models.items():
+                if 'auc_score' in result:
+                    metrics_text = f"""
+                    <b>模型性能指标</b><br>
+                    • AUC分数: {result['auc_score']:.3f}<br>
+                    • 交叉验证: {result.get('cv_mean', 0):.3f} ± {result.get('cv_std', 0):.3f}<br>
+                    • 最优阈值: {result.get('optimal_threshold', 0.5):.3f}<br>
+                    • 总样本数: {len(self.data)}<br>
+                    • 异常样本: {self.data['is_abnormal'].sum()} ({self.data['is_abnormal'].mean()*100:.1f}%)<br>
+                    • 特征数量: {len(self.selected_features) if hasattr(self, 'selected_features') else 'N/A'}<br>
+                    • 网络结构: 五层深度网络 (512, 256, 128, 64, 32)
+                    """
+                    ax8.text(0.1, 0.5, metrics_text, transform=ax8.transAxes, 
+                            fontsize=12, verticalalignment='center',
+                            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.5))
+                    break
+        
+        plt.tight_layout()
+        plt.savefig('problem4_analysis/results/comprehensive_dashboard.png', dpi=300, bbox_inches='tight')
+        plt.close()
         
     def run_complete_analysis(self):
         """运行完整分析流程"""
