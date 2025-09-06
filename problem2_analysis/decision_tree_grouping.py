@@ -151,15 +151,15 @@ class DecisionTreeGrouping:
         
         print("正在搜索最优决策树深度...")
         
-        # 限制树深度，适应简化特征
-        for max_depth in range(2, min(self.max_groups + 1, 4)):
-            # 创建决策树回归器，针对单特征优化参数
+        # 扩大树深度范围，确保能生成足够的分组
+        for max_depth in range(3, self.max_groups + 2):  # 从深度3开始，最大到max_groups+1
+            # 创建决策树回归器，放宽参数以生成更多组
             tree = DecisionTreeRegressor(
                 max_depth=max_depth,
-                min_samples_leaf=max(self.min_samples_per_group, len(feature_df) // 15),
-                min_samples_split=max(self.min_samples_per_group * 2, len(feature_df) // 8),
+                min_samples_leaf=max(8, len(feature_df) // 30),  # 进一步降低每个叶子的最小样本数
+                min_samples_split=max(15, len(feature_df) // 15),  # 进一步降低分裂所需的最小样本数
                 random_state=42,
-                ccp_alpha=0.005  # 适度剪枝
+                ccp_alpha=0.0  # 完全不剪枝，允许完全展开的树结构
             )
             
             # 使用交叉验证评估（简化版本）
@@ -218,9 +218,7 @@ class DecisionTreeGrouping:
                     'constraint_satisfaction_rate': group_data['满足95%约束'].mean()
                 }
         
-            # 后处理：重新平衡样本分布（如果需要）
-            if len(groups) > 1:
-                groups, group_stats = self._simplified_rebalance_groups(groups, group_stats, feature_df)
+            # 删除样本重平衡代码
 
             self.grouping_result = {
                 'tree_model': best_tree,
@@ -236,101 +234,22 @@ class DecisionTreeGrouping:
             print(f"分组完成，共生成 {len(groups)} 个组")
             
         else:
-            print("决策树拟合失败，使用备用分组方案")
-            # 备用方案：基于达标时间的简单分组
-            self.grouping_result = self._fallback_grouping_by_weeks(feature_df)
-        
-        return self.grouping_result
-    
-    def _simplified_rebalance_groups(self, groups: Dict, group_stats: Dict, 
-                                   feature_df: pd.DataFrame) -> Tuple[Dict, Dict]:
-        """
-        简化的样本重平衡方法
-        基于BMI范围确保分组合理
-        """
-        print("=== 简化样本重平衡 ===")
-        
-        # 检查样本分布是否需要调整
-        group_sizes = [stats['sample_size'] for stats in group_stats.values()]
-        min_size = min(group_sizes)
-        max_size = max(group_sizes)
-        
-        if max_size / min_size > 2.0:  # 如果组间差异过大
-            print("检测到样本分布不均匀，进行调整...")
-            
-            # 基于BMI均匀分组（备用方案）
-            return self._fallback_grouping_by_weeks(feature_df, as_groups=True)
-        else:
-            print("样本分布较为均匀，保持原分组")
-            return groups, group_stats
-
-    def _fallback_grouping_by_weeks(self, feature_df: pd.DataFrame, as_groups: bool = False) -> Dict:
-        """
-        基于达标时间的备用分组方案
-        直接按达标周数区间进行分组
-        """
-        print("=== 使用备用分组方案：按达标时间分组 ===")
-        
-        # 按达标周数分组
-        weeks = feature_df['最早达标周数']
-        
-        # 定义分组区间（根据达标时间分布）
-        quantiles = np.quantile(weeks.dropna(), [0.25, 0.5, 0.75])
-        
-        def assign_group(week):
-            if pd.isna(week):
-                return 'Group_Unknown'
-            elif week <= quantiles[0]:
-                return 'Group_1'  # 早期达标组
-            elif week <= quantiles[1]:
-                return 'Group_2'  # 中早期达标组
-            elif week <= quantiles[2]:
-                return 'Group_3'  # 中期达标组
-            else:
-                return 'Group_4'  # 晚期达标组
-        
-        feature_df['Group'] = feature_df['最早达标周数'].apply(assign_group)
-        
-        # 构建分组结果
-        groups = {}
-        group_stats = {}
-        
-        for group_name in feature_df['Group'].unique():
-            if group_name == 'Group_Unknown':
-                continue
-                
-            group_data = feature_df[feature_df['Group'] == group_name]
-            
-            groups[group_name] = {
-                'indices': group_data.index.tolist(),
-                'data': group_data,
-                'assignment_method': 'weeks_based'
-            }
-            
-            group_stats[group_name] = {
-                'sample_size': len(group_data),
-                'bmi_range': (group_data['BMI'].min(), group_data['BMI'].max()),
-                'bmi_mean': group_data['BMI'].mean(),
-                'earliest_达标时间_mean': group_data['最早达标周数'].mean(),
-                'earliest_达标时间_std': group_data['最早达标周数'].std(),
-                'optimal_test_time_mean': group_data['最优检测周数'].mean(),
-                'constraint_satisfaction_rate': group_data['满足95%约束'].mean()
-            }
-        
-        if as_groups:
-            return groups, group_stats
-        else:
-            return {
+            print("决策树拟合失败")
+            # 返回空的分组结果
+            self.grouping_result = {
                 'tree_model': None,
                 'best_depth': None,
                 'best_cv_score': None,
-                'groups': groups,
-                'group_stats': group_stats,
-                'feature_names': ['BMI'],
-                'feature_importance': {'BMI': 1.0},
-                'total_groups': len(groups),
-                'method': 'fallback_weeks_based'
+                'groups': {},
+                'group_stats': {},
+                'feature_names': [],
+                'feature_importance': {},
+                'total_groups': 0
             }
+        
+        return self.grouping_result
+    
+
 
     def _rebalance_groups(self, groups: Dict, group_stats: Dict, feature_df: pd.DataFrame) -> Tuple[Dict, Dict]:
         """
@@ -410,94 +329,6 @@ class DecisionTreeGrouping:
             print(f"样本分布相对均匀，保持原分组")
             return groups, group_stats
 
-    def refine_grouping_with_bmi_bounds(self, feature_df: pd.DataFrame) -> Dict:
-        """
-        基于决策树结果，细化BMI分组边界（确保满足三个约束条件）
-        使用严格的分段约束方法，确保相邻且不交
-        
-        Parameters:
-        - feature_df: 特征数据框
-        
-        Returns:
-        - refined_groups: 细化的分组结果
-        """
-        if self.grouping_result is None:
-            raise ValueError("请先运行optimize_grouping_with_decision_tree")
-        
-        # 首先收集所有组的BMI信息
-        group_bmi_info = []
-        for group_name, group_info in self.grouping_result['groups'].items():
-            group_data = group_info['data']
-            bmi_min = group_data['BMI'].min()
-            bmi_max = group_data['BMI'].max()
-            bmi_mean = group_data['BMI'].mean()
-            
-            group_bmi_info.append({
-                'group_name': group_name,
-                'group_data': group_data,
-                'bmi_min': bmi_min,
-                'bmi_max': bmi_max,
-                'bmi_mean': bmi_mean,
-                'sample_size': len(group_data)
-            })
-        
-        # 按BMI均值排序
-        group_bmi_info.sort(key=lambda x: x['bmi_mean'])
-        
-        # 使用严格的分段约束方法
-        refined_groups = {}
-        bmi_groups = []  # 用于约束检查
-        
-        # 获取全局BMI范围
-        all_bmi_values = feature_df['BMI'].values
-        global_bmi_min = all_bmi_values.min()
-        global_bmi_max = all_bmi_values.max()
-        
-        # 计算严格的分段边界点
-        n_groups = len(group_bmi_info)
-        boundary_points = np.linspace(global_bmi_min, global_bmi_max, n_groups + 1)
-        
-        # 为每个组重新定义边界，确保严格相邻且不交
-        for i, group_info in enumerate(group_bmi_info):
-            group_name = group_info['group_name']
-            group_data = group_info['group_data']
-            
-            # 使用计算出的边界点
-            new_bmi_min = boundary_points[i]
-            new_bmi_max = boundary_points[i + 1]
-            
-            # 对于最后一组，确保包含最大值
-            if i == n_groups - 1:
-                new_bmi_max = global_bmi_max
-            
-            # 计算该组的推荐检测时间范围
-            optimal_times = group_data['最优检测周数']
-            recommended_time = optimal_times.mean()
-            time_std = optimal_times.std()
-            
-            refined_groups[group_name] = {
-                'bmi_range': (new_bmi_min, new_bmi_max),
-                'bmi_interval': f"[{new_bmi_min:.1f}, {new_bmi_max:.1f}]",
-                'bmi_mean': group_info['bmi_mean'],
-                'sample_size': group_info['sample_size'],
-                'recommended_test_time_weeks': recommended_time,
-                'test_time_std': time_std,
-                'test_time_range': (recommended_time - time_std, recommended_time + time_std),
-                'expected_minimal_risk': group_data['最小总风险'].mean(),
-                'risk_std': group_data['最小总风险'].std(),
-                'constraint_satisfaction_rate': group_data['满足约束'].mean(),
-                'average_success_probability': group_data['最优时点成功概率'].mean(),
-                'group_data': group_data
-            }
-            
-            # 收集BMI分组信息用于约束检查
-            bmi_groups.append((new_bmi_min, new_bmi_max))
-        
-        # 验证分段约束
-        print(f"BMI分段边界点: {boundary_points}")
-        print(f"分组边界: {bmi_groups}")
-        
-        return refined_groups
     
     def validate_bmi_segmentation_constraints(self, refined_groups: Dict) -> Dict:
         """

@@ -2,66 +2,182 @@
   "Group_1": [
     {
       "measurement_error_std": 0.002,
-      "expected_risk": 0.5161533055971724,
-      "success_rate": 0.9991057476936407,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999891520662881,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
-      "average_delay_risk": 0.5161533055971724
+      "average_delay_risk": 0.1
     },
     {
       "measurement_error_std": 0.003,
-      "expected_risk": 0.5161533055971724,
-      "success_rate": 0.9989411966645408,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999833439648856,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
-      "average_delay_risk": 0.5161533055971724
+      "average_delay_risk": 0.1
     },
     {
       "measurement_error_std": 0.004,
-      "expected_risk": 0.5161533055971724,
-      "success_rate": 0.9986818214938608,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999714214103355,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
-      "average_delay_risk": 0.5161533055971724
+      "average_delay_risk": 0.1
     },
     {
       "measurement_error_std": 0.005,
-      "expected_risk": 0.5161533055971724,
-      "success_rate": 0.9982971262658514,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999475217155132,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
-      "average_delay_risk": 0.5161533055971724
+      "average_delay_risk": 0.1
     },
     {
       "measurement_error_std": 0.006,
-      "expected_risk": 0.5161533055971724,
-      "success_rate": 0.997746700992462,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999008047808231,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
-      "average_delay_risk": 0.5161533055971724
+      "average_delay_risk": 0.1
     },
     {
       "measurement_error_std": 0.008,
-      "expected_risk": 0.516834371051986,
-      "success_rate": 0.9959426516059267,
-      "constraint_satisfaction_rate": 0.9959183673469387,
-      "average_detection_failure_risk": 0.0006810654548136142,
-      "average_delay_risk": 0.5161533055971724
+      "expected_risk": 0.1,
+      "success_rate": 0.9996550443148812,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
     },
     {
       "measurement_error_std": 0.01,
-      "expected_risk": 0.5191221840525471,
-      "success_rate": 0.9928093683007886,
-      "constraint_satisfaction_rate": 0.9795918367346939,
-      "average_detection_failure_risk": 0.002968878455374578,
-      "average_delay_risk": 0.5161533055971724
+      "expected_risk": 0.1,
+      "success_rate": 0.9989582763676434,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    }
+  ],
+  "Group_2": [
+    {
+      "measurement_error_std": 0.002,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999774376399453,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    },
+    {
+      "measurement_error_std": 0.003,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999662606257221,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    },
+    {
+      "measurement_error_std": 0.004,
+      "expected_risk": 0.1,
+      "success_rate": 0.999944011063689,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    },
+    {
+      "measurement_error_std": 0.005,
+      "expected_risk": 0.1,
+      "success_rate": 0.9999010013201505,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    },
+    {
+      "measurement_error_std": 0.006,
+      "expected_risk": 0.1,
+      "success_rate": 0.9998201773151357,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    },
+    {
+      "measurement_error_std": 0.008,
+      "expected_risk": 0.1,
+      "success_rate": 0.9994219988780266,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    },
+    {
+      "measurement_error_std": 0.01,
+      "expected_risk": 0.1,
+      "success_rate": 0.9983737334482694,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.1
+    }
+  ],
+  "Group_3": [
+    {
+      "measurement_error_std": 0.002,
+      "expected_risk": 0.5020277462020407,
+      "success_rate": 0.9982258958070699,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.5020277462020407
+    },
+    {
+      "measurement_error_std": 0.003,
+      "expected_risk": 0.5020277462020407,
+      "success_rate": 0.9979227085512374,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.5020277462020407
+    },
+    {
+      "measurement_error_std": 0.004,
+      "expected_risk": 0.5020277462020407,
+      "success_rate": 0.9974527706178442,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.5020277462020407
+    },
+    {
+      "measurement_error_std": 0.005,
+      "expected_risk": 0.5020277462020407,
+      "success_rate": 0.9967709381390135,
+      "constraint_satisfaction_rate": 1.0,
+      "average_detection_failure_risk": 0.0,
+      "average_delay_risk": 0.5020277462020407
+    },
+    {
+      "measurement_error_std": 0.006,
+      "expected_risk": 0.5025709480169193,
+      "success_rate": 0.995821025699107,
+      "constraint_satisfaction_rate": 0.9906976744186047,
+      "average_detection_failure_risk": 0.0005432018148785106,
+      "average_delay_risk": 0.5020277462020407
+    },
+    {
+      "measurement_error_std": 0.008,
+      "expected_risk": 0.5043996646468603,
+      "success_rate": 0.992858184567179,
+      "constraint_satisfaction_rate": 0.986046511627907,
+      "average_detection_failure_risk": 0.002371918444819499,
+      "average_delay_risk": 0.5020277462020407
+    },
+    {
+      "measurement_error_std": 0.01,
+      "expected_risk": 0.5098395754629836,
+      "success_rate": 0.9880560282212707,
+      "constraint_satisfaction_rate": 0.9627906976744186,
+      "average_detection_failure_risk": 0.007811829260942939,
+      "average_delay_risk": 0.5020277462020407
     }
   ],
   "Group_4": [
     {
       "measurement_error_std": 0.002,
       "expected_risk": 0.5393735103268533,
-      "success_rate": 0.9801264189554244,
+      "success_rate": 0.9939425398806945,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
       "average_delay_risk": 0.5393735103268533
@@ -69,7 +185,7 @@
     {
       "measurement_error_std": 0.003,
       "expected_risk": 0.5393735103268533,
-      "success_rate": 0.9780164153813844,
+      "success_rate": 0.9931456103507895,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
       "average_delay_risk": 0.5393735103268533
@@ -77,7 +193,7 @@
     {
       "measurement_error_std": 0.004,
       "expected_risk": 0.5393735103268533,
-      "success_rate": 0.9749972102396599,
+      "success_rate": 0.9919537043417892,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
       "average_delay_risk": 0.5393735103268533
@@ -85,33 +201,33 @@
     {
       "measurement_error_std": 0.005,
       "expected_risk": 0.5393735103268533,
-      "success_rate": 0.9710306999179841,
+      "success_rate": 0.9902974420279085,
       "constraint_satisfaction_rate": 1.0,
       "average_detection_failure_risk": 0.0,
       "average_delay_risk": 0.5393735103268533
     },
     {
       "measurement_error_std": 0.006,
-      "expected_risk": 0.5759138962595901,
-      "success_rate": 0.9660981246118254,
-      "constraint_satisfaction_rate": 0.5,
-      "average_detection_failure_risk": 0.036540385932736785,
+      "expected_risk": 0.5485086068100375,
+      "success_rate": 0.9880989882309457,
+      "constraint_satisfaction_rate": 0.875,
+      "average_detection_failure_risk": 0.009135096483184196,
       "average_delay_risk": 0.5393735103268533
     },
     {
       "measurement_error_std": 0.008,
-      "expected_risk": 0.6663160772237676,
-      "success_rate": 0.9534149840211636,
-      "constraint_satisfaction_rate": 0.5,
-      "average_detection_failure_risk": 0.1269425668969143,
+      "expected_risk": 0.5711091520510819,
+      "success_rate": 0.981781914597104,
+      "constraint_satisfaction_rate": 0.875,
+      "average_detection_failure_risk": 0.031735641724228575,
       "average_delay_risk": 0.5393735103268533
     },
     {
       "measurement_error_std": 0.01,
-      "expected_risk": 0.7724591163544082,
-      "success_rate": 0.9374424253246187,
-      "constraint_satisfaction_rate": 0.5,
-      "average_detection_failure_risk": 0.2330856060275549,
+      "expected_risk": 0.597644911833742,
+      "success_rate": 0.9725945616192344,
+      "constraint_satisfaction_rate": 0.875,
+      "average_detection_failure_risk": 0.058271401506888726,
       "average_delay_risk": 0.5393735103268533
     }
   ]

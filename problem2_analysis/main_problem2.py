@@ -65,7 +65,7 @@ class Problem2CompleteAnalysis:
         # 初始化各个模块（按新思路简化）
         self.time_predictor = TimePredictionModel(self.problem1_data_path)  # 自动拟合简化模型
         self.risk_model = RiskModel()
-        self.decision_tree = DecisionTreeGrouping(max_groups=5, min_samples_per_group=20)
+        self.decision_tree = DecisionTreeGrouping(max_groups=8, min_samples_per_group=15)
         self.visualizer = Problem2Visualizer()
         
         # 存储分析结果
