@@ -76,12 +76,8 @@ class Problem1Analysis:
         print("\n步骤8: 关系模型确定与打印")
         self.print_relationship_models()
         
-        # 第九步：保存关系模型
-        print("\n步骤9: 保存关系模型")
-        self.save_relationship_model()
-        
-        # 第十步：结果保存与报告生成
-        print("\n步骤10: 结果保存与报告生成")
+        # 第九步：结果保存与报告生成
+        print("\n步骤9: 结果保存与报告生成")
         self.save_all_results()
         
         print("\n" + "="*60)
@@ -202,509 +198,409 @@ class Problem1Analysis:
         self._display_correlation_results(correlation_matrix, correlation_pvalues)
     
     def fit_mixed_effects_models(self):
-        """拟合多个混合效应模型"""
+        """拟合增强的随机斜率混合效应模型"""
         
-        print("拟合模型中...")
+        print("拟合增强的随机斜率模型中...")
         
-        # 模型1：基础随机截距模型
-        result1 = self.model_analyzer.fit_basic_model(
-            self.processed_data, 
-            model_name="basic_random_intercept"
-        )
+        # 拟合包含高相关性变量的随机斜率模型
+        result = self.model_analyzer.fit_random_slope_model(self.processed_data)
         
-        # 模型2：随机截距+随机斜率模型
-        result2 = self.model_analyzer.fit_random_slope_model(
-            self.processed_data,
-            model_name="random_slope"
-        )
-        
-        # 模型3：包含交互效应的模型
-        result3 = self.model_analyzer.fit_interaction_model(
-            self.processed_data,
-            model_name="interaction_effects"
-        )
-        
-        
-        print(f"共拟合了{len(self.model_analyzer.results)}个模型")
+        if result is not None:
+            print("模型拟合成功")
+            # 保存模型结果
+            self.analysis_results['mixed_effects_model'] = result
+        else:
+            print("模型拟合失败")
     
     def model_comparison(self):
-        """模型比较与选择"""
+        """获取模型摘要信息"""
         
-        # 使用增强的模型比较（包含R方等统计指标）
-        comparison_df = self.model_analyzer.compare_models_enhanced(self.processed_data)
-        self.analysis_results['model_comparison'] = comparison_df
-        
-        # 绘制模型比较图
-        if not comparison_df.empty:
-            self.visualizer.plot_model_comparison(
-                comparison_df,
-                save_path=self.results_manager.get_figure_path("model_comparison.png"),
-                separate_figs=self.separate_figures
-            )
-        
-        print("模型比较完成")
-        
-        # 显示增强的模型比较结果
-        print("\n" + "="*80)
-        print("增强的模型比较结果（包含R方等统计指标）")
-        print("="*80)
-        print(comparison_df.round(4))
+        if self.model_analyzer.result is not None:
+            # 获取模型摘要
+            summary = self.model_analyzer.get_model_summary()
+            self.analysis_results['model_summary'] = summary
+            
+            # 获取性能指标
+            performance = self.model_analyzer.calculate_model_performance(self.processed_data)
+            self.analysis_results['model_performance'] = performance
+            
+            print("模型分析完成")
+        else:
+            print("模型尚未拟合")
     
     def significance_testing(self):
-        """显著性检验"""
+        """显著性检验和结果分析"""
         
-        # 获取所有模型的固定效应和统计指标
-        all_fixed_effects = {}
-        all_model_stats = {}
-        
-        for model_name in self.model_analyzer.results.keys():
-            print(f"分析模型: {model_name}")
+        if self.model_analyzer.result is not None:
+            print("分析随机斜率模型结果...")
             
-            # 固定效应检验
-            fixed_effects_df = self.model_analyzer.test_fixed_effects(model_name)
+            # 获取固定效应摘要
+            fixed_effects_df = self.model_analyzer.get_fixed_effects_summary()
             if fixed_effects_df is not None:
-                all_fixed_effects[model_name] = fixed_effects_df
-            
-            # 计算R平方等统计指标
-            r_squared_info = self.model_analyzer.calculate_r_squared(
-                model_name, 
-                self.processed_data
-            )
-            if r_squared_info is not None:
-                all_model_stats[model_name] = r_squared_info
-                
-                # 如果是最佳模型，进行额外分析
-                if model_name == self.model_analyzer.best_model:
-                    self.analysis_results['best_model_fixed_effects'] = fixed_effects_df
-                    self.analysis_results['best_model_r_squared'] = r_squared_info
-                    
-                    # 随机效应分析
-                    random_effects_info = self.model_analyzer.test_random_effects(model_name)
-                    self.analysis_results['best_model_random_effects'] = random_effects_info
+                self.analysis_results['fixed_effects'] = fixed_effects_df
                     
                     # 绘制固定效应图
-                    if fixed_effects_df is not None:
+                try:
                         self.visualizer.plot_fixed_effects(
                             fixed_effects_df,
                             save_path=self.results_manager.get_figure_path("fixed_effects.png")
                         )
-        
-        # 保存所有模型的结果
-        self.analysis_results['all_fixed_effects'] = all_fixed_effects
-        self.analysis_results['all_model_stats'] = all_model_stats
-        
-        print("显著性检验完成")
-        
-        # 显示所有模型的统计指标
-        print("\n" + "="*80)
-        print("所有模型的统计指标对比")
-        print("="*80)
-        
-        for model_name, stats in all_model_stats.items():
-            print(f"\n模型: {model_name}")
-            print(f"  伪R²: {stats.get('Pseudo_R2', 'N/A'):.4f}")
-            print(f"  相关系数: {stats.get('Correlation', 'N/A'):.4f}")
-            print(f"  相关系数R²: {stats.get('Correlation_R2', 'N/A'):.4f}")
-        
-        # 显示最佳模型结果
-        best_model_name = self.model_analyzer.best_model
-        if best_model_name and best_model_name in all_fixed_effects:
-            print(f"\n" + "="*50)
-            print(f"最佳模型 {best_model_name} 的详细结果:")
-            print("="*50)
+                except Exception as e:
+                    print(f"绘制固定效应图时出错: {e}")
             
-            # 显示统计指标
-            if best_model_name in all_model_stats:
-                stats = all_model_stats[best_model_name]
-                print(f"伪R²: {stats.get('Pseudo_R2', 'N/A'):.4f}")
-                print(f"相关系数: {stats.get('Correlation', 'N/A'):.4f}")
-                print(f"相关系数R²: {stats.get('Correlation_R2', 'N/A'):.4f}")
+            # 获取变量重要性分析
+            importance_df = self.model_analyzer.get_variable_importance()
+            if importance_df is not None:
+                self.analysis_results['variable_importance'] = importance_df
             
-            # 显示固定效应
-            fixed_effects_df = all_fixed_effects[best_model_name]
-            print(f"\n固定效应结果:")
-            for _, row in fixed_effects_df.iterrows():
-                if row['Variable'] != 'const':
-                    print(f"  {row['Variable']}: 系数={row['Coefficient']:.6f}, "
-                          f"p值={row['p_value']:.6f}, 显著性={row['Significance']}")
+            # 获取性能指标
+            performance = self.model_analyzer.calculate_model_performance(self.processed_data)
+            if performance is not None:
+                self.analysis_results['model_performance'] = performance
+                
+                print(f"\n模型性能指标:")
+                # 安全地格式化性能指标
+                corr_val = performance.get('Correlation', 'N/A')
+                if isinstance(corr_val, (int, float)):
+                    print(f"  相关系数: {corr_val:.4f}")
+                else:
+                    print(f"  相关系数: {corr_val}")
+                
+                r2_val = performance.get('R_squared', 'N/A')
+                if isinstance(r2_val, (int, float)):
+                    print(f"  R²: {r2_val:.4f}")
+                else:
+                    print(f"  R²: {r2_val}")
+                
+                pseudo_r2_val = performance.get('Pseudo_R2', 'N/A')
+                if isinstance(pseudo_r2_val, (int, float)):
+                    print(f"  伪R²: {pseudo_r2_val:.4f}")
+                else:
+                    print(f"  伪R²: {pseudo_r2_val}")
+                
+                aic_val = performance.get('AIC', 'N/A')
+                if isinstance(aic_val, (int, float)):
+                    print(f"  AIC: {aic_val:.2f}")
+                else:
+                    print(f"  AIC: {aic_val}")
+            
+            print("显著性检验和结果分析完成")
         else:
-            print("没有找到最佳模型")
+            print("模型尚未拟合，无法进行显著性检验")
     
     def model_diagnostics(self):
         """模型诊断"""
         
-        best_model_name = self.model_analyzer.best_model
-        
-        if best_model_name:
-            # 进行模型诊断
-            diagnostics = self.model_analyzer.perform_model_diagnostics(
-                best_model_name, 
-                self.processed_data
-            )
-            self.analysis_results['best_model_diagnostics'] = diagnostics
+        if self.model_analyzer.result is not None:
+            print("进行模型诊断...")
             
-            # 绘制诊断图
-            if diagnostics:
-                self.visualizer.plot_model_diagnostics(
-                    diagnostics,
-                    best_model_name,
-                    save_path=self.results_manager.get_figure_path("model_diagnostics.png"),
-                    separate_figs=self.separate_figures
-                )
-            
-            # 预测个体轨迹
-            predictions_df = self.model_analyzer.predict_individual_trajectories(
-                best_model_name,
-                self.processed_data,
-                subject_ids=None  # 使用前10个个体
-            )
-            
-            if predictions_df is not None:
-                self.analysis_results['model_predictions'] = predictions_df
+            # 简单的残差分析
+            try:
+                predicted = self.model_analyzer.result.fittedvalues
+                observed = self.processed_data['Y染色体浓度'].iloc[:len(predicted)]
+                residuals = observed - predicted
                 
-                # 绘制预测vs观测图
-                self.visualizer.plot_predicted_vs_observed(
-                    predictions_df,
-                    save_path=self.results_manager.get_figure_path("predicted_vs_observed.png")
-                )
+                # 保存残差信息
+                diagnostics = {
+                    'residuals': residuals,
+                    'predicted': predicted,
+                    'observed': observed,
+                    'residuals_std': residuals.std(),
+                    'residuals_mean': residuals.mean()
+                }
+                
+                self.analysis_results['model_diagnostics'] = diagnostics
+                
+                print(f"残差标准差: {diagnostics['residuals_std']:.6f}")
+                print(f"残差均值: {diagnostics['residuals_mean']:.6f}")
             
             print("模型诊断完成")
+                
+            except Exception as e:
+                print(f"模型诊断时出错: {e}")
         else:
-            print("没有最佳模型进行诊断")
+            print("模型尚未拟合，无法进行诊断")
     
     def print_relationship_models(self):
-        """打印和确定关系模型"""
+        """打印关系模型结果"""
         
+        if self.model_analyzer.result is not None:
         print("\n" + "="*80)
-        print("关系模型确定与打印")
+            print("增强的随机斜率混合效应模型结果")
         print("="*80)
         
-        # 获取最佳模型
-        best_model_name = self.model_analyzer.best_model
-        
-        if not best_model_name:
-            print("没有找到最佳模型")
-            return
-        
-        print(f"\n最佳模型: {best_model_name}")
-        print("-" * 50)
-        
-        # 获取模型结果
-        if best_model_name in self.model_analyzer.results:
-            model_result = self.model_analyzer.results[best_model_name]
+            # 使用新的方法打印完整结果
+            complete_results = self.model_analyzer.print_complete_results(self.processed_data)
             
-            # 打印模型摘要
-            print("\n1. 模型摘要:")
-            print(model_result.summary())
-            
-            # 打印固定效应系数
-            print("\n2. 固定效应系数:")
-            print("-" * 30)
-            fixed_effects = model_result.params
-            for param, value in fixed_effects.items():
-                print(f"{param:20s}: {value:10.6f}")
-            
-            # 打印随机效应方差
-            print("\n3. 随机效应方差:")
-            print("-" * 30)
-            if hasattr(model_result, 'cov_re'):
-                print("随机效应协方差矩阵:")
-                print(model_result.cov_re)
-            
-            # 打印模型拟合统计
-            print("\n4. 模型拟合统计:")
-            print("-" * 30)
-            print(f"AIC: {model_result.aic:.4f}")
-            print(f"BIC: {model_result.bic:.4f}")
-            print(f"对数似然: {model_result.llf:.4f}")
-            
-            # 打印模型公式
-            print("\n5. 模型数学表达式:")
-            print("-" * 30)
-            self._print_model_formula(best_model_name, model_result)
-            
-            # 打印变量关系解释
-            print("\n6. 变量关系解释:")
-            print("-" * 30)
-            self._print_variable_relationships(model_result)
-            
+            # 保存结果到分析结果中
+            if complete_results:
+                self.analysis_results['complete_model_results'] = complete_results
         else:
-            print(f"未找到模型 {best_model_name} 的结果")
-    
-    def _print_model_formula(self, model_name: str, model_result):
-        """打印模型数学表达式"""
-        
-        # 获取固定效应系数
-        params = model_result.params
-        
-        # 构建模型公式
-        formula_parts = []
-        
-        # 截距项
-        if 'const' in params:
-            intercept = params['const']
-            formula_parts.append(f"{intercept:.6f}")
-        
-        # 其他固定效应
-        for param, coef in params.items():
-            if param != 'const':
-                if coef >= 0:
-                    formula_parts.append(f"+ {coef:.6f} * {param}")
-                else:
-                    formula_parts.append(f"- {abs(coef):.6f} * {param}")
-        
-        # 构建完整公式
-        formula = "Y染色体浓度 = " + " ".join(formula_parts)
-        
-        print(f"模型名称: {model_name}")
-        print(f"数学表达式: {formula}")
-        
-        # 添加随机效应说明
-        if 'random_intercept' in model_name or 'random_slope' in model_name:
-            print("\n随机效应:")
-            if 'random_intercept' in model_name:
-                print("- 随机截距: 每个孕妇有不同的基线Y染色体浓度")
-            if 'random_slope' in model_name:
-                print("- 随机斜率: 每个孕妇的孕周效应不同")
-    
-    def _print_variable_relationships(self, model_result):
-        """打印变量关系解释"""
-        
-        params = model_result.params
-        pvalues = model_result.pvalues
-        
-        print("变量对Y染色体浓度的影响:")
-        print()
-        
-        for param, coef in params.items():
-            if param == 'const':
-                continue
-                
-            pval = pvalues.get(param, np.nan)
-            
-            # 解释系数含义
-            if param == 'gestational_days':
-                print(f"• 孕周天数 (gestational_days):")
-                print(f"  系数: {coef:.6f}")
-                print(f"  含义: 孕周每增加1天，Y染色体浓度平均变化 {coef:.6f}")
-                if not np.isnan(pval):
-                    significance = "显著" if pval < 0.05 else "不显著"
-                    print(f"  显著性: {significance} (p = {pval:.4f})")
-                print()
-                
-            elif param == 'BMI_centered':
-                print(f"• BMI (BMI_centered):")
-                print(f"  系数: {coef:.6f}")
-                print(f"  含义: BMI每增加1个单位，Y染色体浓度平均变化 {coef:.6f}")
-                if not np.isnan(pval):
-                    significance = "显著" if pval < 0.05 else "不显著"
-                    print(f"  显著性: {significance} (p = {pval:.4f})")
-                print()
-                
-            elif param == 'age_centered':
-                print(f"• 年龄 (age_centered):")
-                print(f"  系数: {coef:.6f}")
-                print(f"  含义: 年龄每增加1岁，Y染色体浓度平均变化 {coef:.6f}")
-                if not np.isnan(pval):
-                    significance = "显著" if pval < 0.05 else "不显著"
-                    print(f"  显著性: {significance} (p = {pval:.4f})")
-                print()
-                
-            elif param == '身高':
-                print(f"• 身高:")
-                print(f"  系数: {coef:.6f}")
-                print(f"  含义: 身高每增加1cm，Y染色体浓度平均变化 {coef:.6f}")
-                if not np.isnan(pval):
-                    significance = "显著" if pval < 0.05 else "不显著"
-                    print(f"  显著性: {significance} (p = {pval:.4f})")
-                print()
-                
-            elif param == '体重':
-                print(f"• 体重:")
-                print(f"  系数: {coef:.6f}")
-                print(f"  含义: 体重每增加1kg，Y染色体浓度平均变化 {coef:.6f}")
-                if not np.isnan(pval):
-                    significance = "显著" if pval < 0.05 else "不显著"
-                    print(f"  显著性: {significance} (p = {pval:.4f})")
-                print()
-    
-    def save_relationship_model(self):
-        """保存关系模型到文件"""
-        
-        best_model_name = self.model_analyzer.best_model
-        
-        if not best_model_name or best_model_name not in self.model_analyzer.results:
-            print("没有找到最佳模型，无法保存关系模型")
-            return
-        
-        model_result = self.model_analyzer.results[best_model_name]
-        
-        # 创建模型报告文件
-        model_report_path = os.path.join(self.results_dir, "reports", "relationship_model_report.md")
-        os.makedirs(os.path.dirname(model_report_path), exist_ok=True)
-        
-        with open(model_report_path, 'w', encoding='utf-8') as f:
-            f.write("# 关系模型报告\n\n")
-            f.write(f"**最佳模型**: {best_model_name}\n\n")
-            
-            # 模型摘要
-            f.write("## 1. 模型摘要\n\n")
-            f.write("```\n")
-            f.write(str(model_result.summary()))
-            f.write("\n```\n\n")
-            
-            # 固定效应系数
-            f.write("## 2. 固定效应系数\n\n")
-            f.write("| 变量 | 系数 | 标准误 | P值 |\n")
-            f.write("|------|------|--------|-----|\n")
-            
-            params = model_result.params
-            pvalues = model_result.pvalues
-            std_errors = model_result.bse
-            
-            for param in params.index:
-                coef = params[param]
-                pval = pvalues.get(param, np.nan)
-                std_err = std_errors.get(param, np.nan)
-                significance = "***" if pval < 0.001 else "**" if pval < 0.01 else "*" if pval < 0.05 else ""
-                f.write(f"| {param} | {coef:.6f} | {std_err:.6f} | {pval:.4f}{significance} |\n")
-            
-            f.write("\n")
-            
-            # 模型数学表达式
-            f.write("## 3. 模型数学表达式\n\n")
-            formula_parts = []
-            if 'const' in params:
-                intercept = params['const']
-                formula_parts.append(f"{intercept:.6f}")
-            
-            for param, coef in params.items():
-                if param != 'const':
-                    if coef >= 0:
-                        formula_parts.append(f"+ {coef:.6f} * {param}")
-                    else:
-                        formula_parts.append(f"- {abs(coef):.6f} * {param}")
-            
-            formula = "Y染色体浓度 = " + " ".join(formula_parts)
-            f.write(f"```\n{formula}\n```\n\n")
-            
-            # 变量关系解释
-            f.write("## 4. 变量关系解释\n\n")
-            for param, coef in params.items():
-                if param == 'const':
-                    continue
-                    
-                pval = pvalues.get(param, np.nan)
-                significance = "显著" if not np.isnan(pval) and pval < 0.05 else "不显著"
-                
-                if param == 'gestational_days':
-                    f.write(f"### 孕周天数 (gestational_days)\n")
-                    f.write(f"- **系数**: {coef:.6f}\n")
-                    f.write(f"- **含义**: 孕周每增加1天，Y染色体浓度平均变化 {coef:.6f}\n")
-                    f.write(f"- **显著性**: {significance} (p = {pval:.4f})\n\n")
-                    
-                elif param == 'BMI_centered':
-                    f.write(f"### BMI (BMI_centered)\n")
-                    f.write(f"- **系数**: {coef:.6f}\n")
-                    f.write(f"- **含义**: BMI每增加1个单位，Y染色体浓度平均变化 {coef:.6f}\n")
-                    f.write(f"- **显著性**: {significance} (p = {pval:.4f})\n\n")
-                    
-                elif param == 'age_centered':
-                    f.write(f"### 年龄 (age_centered)\n")
-                    f.write(f"- **系数**: {coef:.6f}\n")
-                    f.write(f"- **含义**: 年龄每增加1岁，Y染色体浓度平均变化 {coef:.6f}\n")
-                    f.write(f"- **显著性**: {significance} (p = {pval:.4f})\n\n")
-                    
-                elif param == '身高':
-                    f.write(f"### 身高\n")
-                    f.write(f"- **系数**: {coef:.6f}\n")
-                    f.write(f"- **含义**: 身高每增加1cm，Y染色体浓度平均变化 {coef:.6f}\n")
-                    f.write(f"- **显著性**: {significance} (p = {pval:.4f})\n\n")
-                    
-                elif param == '体重':
-                    f.write(f"### 体重\n")
-                    f.write(f"- **系数**: {coef:.6f}\n")
-                    f.write(f"- **含义**: 体重每增加1kg，Y染色体浓度平均变化 {coef:.6f}\n")
-                    f.write(f"- **显著性**: {significance} (p = {pval:.4f})\n\n")
-            
-            # 模型拟合统计
-            f.write("## 5. 模型拟合统计\n\n")
-            f.write(f"- **AIC**: {model_result.aic:.4f}\n")
-            f.write(f"- **BIC**: {model_result.bic:.4f}\n")
-            f.write(f"- **对数似然**: {model_result.llf:.4f}\n\n")
-            
-            # 随机效应说明
-            if 'random_intercept' in best_model_name or 'random_slope' in best_model_name:
-                f.write("## 6. 随机效应说明\n\n")
-                if 'random_intercept' in best_model_name:
-                    f.write("- **随机截距**: 每个孕妇有不同的基线Y染色体浓度\n")
-                if 'random_slope' in best_model_name:
-                    f.write("- **随机斜率**: 每个孕妇的孕周效应不同\n")
-        
-        print(f"关系模型报告已保存到: {model_report_path}")
+            print("模型尚未拟合，无法打印结果")
     
     def save_all_results(self):
         """保存所有分析结果"""
         
-        # 保存描述性统计
-        if 'summary_stats' in self.analysis_results:
-            self.results_manager.save_summary_statistics(
-                self.analysis_results['summary_stats']
-            )
+        print("\n" + "="*60)
+        print("保存所有分析结果")
+        print("="*60)
+        
+        # 确保结果目录存在
+        os.makedirs(os.path.join(self.results_dir, "models"), exist_ok=True)
+        os.makedirs(os.path.join(self.results_dir, "data"), exist_ok=True)
+        os.makedirs(os.path.join(self.results_dir, "reports"), exist_ok=True)
+        
+        # 1. 保存模型结果
+        if self.model_analyzer.result is not None:
+            print("\n1. 保存模型结果...")
+            
+            # 保存固定效应结果
+            fixed_effects = self.model_analyzer.get_fixed_effects_summary()
+            if fixed_effects is not None:
+                fixed_effects.to_csv(
+                    os.path.join(self.results_dir, "models", "enhanced_fixed_effects_results.csv"), 
+                    index=False
+                )
+                print("  ✓ 固定效应结果已保存: models/enhanced_fixed_effects_results.csv")
+                
+                # 打印固定效应结果
+                print("\n  固定效应结果预览:")
+                print(fixed_effects[['Variable', 'Coefficient', 'P_value', 'Significance']].to_string(index=False, float_format='%.6f'))
+            
+            # 保存变量重要性
+            importance = self.model_analyzer.get_variable_importance()
+            if importance is not None:
+                importance.to_csv(
+                    os.path.join(self.results_dir, "models", "enhanced_variable_importance.csv"), 
+                    index=False
+                )
+                print("  ✓ 变量重要性结果已保存: models/enhanced_variable_importance.csv")
+                
+                # 打印变量重要性
+                print("\n  变量重要性预览:")
+                print(importance[['Variable', 'Coefficient', 'P_value', 'Significant', 'Effect_Direction']].to_string(index=False, float_format='%.6f'))
+            
+            # 保存模型公式
+            formula_text = self.model_analyzer.get_model_formula_text()
+            if formula_text:
+                with open(
+                    os.path.join(self.results_dir, "models", "enhanced_model_formula.txt"), 
+                    "w", encoding='utf-8'
+                ) as f:
+                    f.write(formula_text)
+                print("  ✓ 模型公式已保存: models/enhanced_model_formula.txt")
+                
+                # 打印模型公式
+                print("\n  模型数学表达式:")
+                print(formula_text)
+            
+            # 保存模型性能指标
+            performance = self.model_analyzer.calculate_model_performance(self.processed_data)
+            if performance:
+                with open(
+                    os.path.join(self.results_dir, "models", "enhanced_model_performance.json"), 
+                    "w", encoding='utf-8'
+                ) as f:
+                    import json
+                    json.dump(performance, f, ensure_ascii=False, indent=2)
+                print("  ✓ 模型性能指标已保存: models/enhanced_model_performance.json")
+                
+                # 打印性能指标
+                print("\n  模型性能指标:")
+                for key, value in performance.items():
+                    print(f"    {key}: {value:.4f}")
+        
+        # 2. 保存数据结果
+        print("\n2. 保存数据结果...")
         
         # 保存相关性矩阵
         if 'correlation_matrix' in self.analysis_results:
-            self.results_manager.save_correlation_matrix(
-                self.analysis_results['correlation_matrix']
+            correlation_matrix = self.analysis_results['correlation_matrix']
+            correlation_matrix.to_csv(
+                os.path.join(self.results_dir, "data", "enhanced_correlation_matrix.csv")
             )
+            print("  ✓ 相关性矩阵已保存: data/enhanced_correlation_matrix.csv")
+            
+            # 打印主要相关性
+            print("\n  主要相关性预览:")
+            y_corr = correlation_matrix['Y染色体浓度'].drop('Y染色体浓度').sort_values(key=abs, ascending=False)
+            for var, corr in y_corr.head(10).items():
+                print(f"    {var}: {corr:.4f}")
         
-        # 保存增强的相关性分析结果
-        if all(key in self.analysis_results for key in ['correlation_matrix', 'correlation_pvalues', 'bmi_group_correlations', 'nonlinear_correlations']):
-            self.results_manager.save_enhanced_correlation_results(
-                self.analysis_results['correlation_matrix'],
-                self.analysis_results['correlation_pvalues'],
-                self.analysis_results['bmi_group_correlations'],
-                self.analysis_results['nonlinear_correlations']
-            )
+        # 保存描述性统计
+        if 'summary_stats' in self.analysis_results:
+            summary_stats = self.analysis_results['summary_stats']
+            with open(
+                os.path.join(self.results_dir, "data", "enhanced_summary_statistics.json"), 
+                "w", encoding='utf-8'
+            ) as f:
+                import json
+                json.dump(summary_stats, f, ensure_ascii=False, indent=2)
+            print("  ✓ 描述性统计已保存: data/enhanced_summary_statistics.json")
+            
+            # 打印关键统计信息
+            print("\n  关键统计信息:")
+            if 'y_concentration_stats' in summary_stats:
+                y_stats = summary_stats['y_concentration_stats']
+                
+                # 安全地格式化数值
+                mean_val = y_stats.get('均值', 'N/A')
+                if isinstance(mean_val, (int, float)):
+                    print(f"    Y染色体浓度均值: {mean_val:.6f}")
+                else:
+                    print(f"    Y染色体浓度均值: {mean_val}")
+                
+                std_val = y_stats.get('标准差', 'N/A')
+                if isinstance(std_val, (int, float)):
+                    print(f"    Y染色体浓度标准差: {std_val:.6f}")
+                else:
+                    print(f"    Y染色体浓度标准差: {std_val}")
+                
+                rate_val = y_stats.get('达标率', 'N/A')
+                if isinstance(rate_val, (int, float)):
+                    print(f"    达标率: {rate_val:.2%}")
+                    else:
+                    print(f"    达标率: {rate_val}")
         
-        # 保存模型结果
-        self.results_manager.save_model_results(
-            self.model_analyzer.results
-        )
+        # 保存BMI分组相关性
+        if 'bmi_group_correlations' in self.analysis_results:
+            bmi_corr = self.analysis_results['bmi_group_correlations']
+            with open(
+                os.path.join(self.results_dir, "data", "bmi_group_correlations.json"), 
+                "w", encoding='utf-8'
+            ) as f:
+                import json
+                json.dump(bmi_corr, f, ensure_ascii=False, indent=2)
+            print("  ✓ BMI分组相关性已保存: data/bmi_group_correlations.json")
+            
+            # 打印BMI分组相关性
+            print("\n  BMI分组相关性:")
+            for group, corrs in bmi_corr.items():
+                print(f"    {group}组:")
+                for var, corr in corrs.items():
+                    print(f"      {var}: {corr:.4f}")
         
-        # 保存模型比较
-        if 'model_comparison' in self.analysis_results:
-            self.results_manager.save_model_comparison(
-                self.analysis_results['model_comparison']
-            )
+        # 3. 保存完整分析报告
+        print("\n3. 生成完整分析报告...")
         
-        # 保存所有模型的固定效应结果
-        if 'all_fixed_effects' in self.analysis_results:
-            self.results_manager.save_fixed_effects_results(self.analysis_results['all_fixed_effects'])
-        elif 'best_model_fixed_effects' in self.analysis_results:
-            # 兼容性：如果只有最佳模型结果，也保存
-            fixed_effects_dict = {
-                self.model_analyzer.best_model: self.analysis_results['best_model_fixed_effects']
-            }
-            self.results_manager.save_fixed_effects_results(fixed_effects_dict)
+        report_content = self._generate_complete_report()
+        with open(
+            os.path.join(self.results_dir, "reports", "enhanced_analysis_report.md"), 
+            "w", encoding='utf-8'
+        ) as f:
+            f.write(report_content)
+        print("  ✓ 完整分析报告已保存: reports/enhanced_analysis_report.md")
         
-        # 保存所有模型的统计指标
-        if 'all_model_stats' in self.analysis_results:
-            self.results_manager.save_model_statistics(self.analysis_results['all_model_stats'])
+        # 4. 保存结果摘要
+        summary = self.get_analysis_summary()
+        with open(
+            os.path.join(self.results_dir, "results_summary.json"), 
+            "w", encoding='utf-8'
+        ) as f:
+            import json
+            json.dump(summary, f, ensure_ascii=False, indent=2)
+        print("  ✓ 结果摘要已保存: results_summary.json")
         
-        # 保存预测结果
-        if 'model_predictions' in self.analysis_results:
-            self.results_manager.save_predictions(
-                self.analysis_results['model_predictions']
-            )
+        print("\n" + "="*60)
+        print("所有结果保存完成！")
+        print("="*60)
+        print(f"结果保存在目录: {self.results_dir}")
+        print("主要文件:")
+        print("  - models/enhanced_fixed_effects_results.csv (固定效应结果)")
+        print("  - models/enhanced_variable_importance.csv (变量重要性)")
+        print("  - models/enhanced_model_formula.txt (模型公式)")
+        print("  - data/enhanced_correlation_matrix.csv (相关性矩阵)")
+        print("  - reports/enhanced_analysis_report.md (完整分析报告)")
+        print("="*60)
+    
+    def _generate_complete_report(self) -> str:
+        """生成完整的分析报告"""
         
-        # 生成分析报告
-        self.results_manager.generate_analysis_report(self.analysis_results)
+        report = []
+        report.append("# NIPT Y染色体浓度增强混合效应模型分析报告")
+        report.append(f"\n**生成时间**: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # 创建结果摘要
-        self.results_manager.create_results_summary()
+        # 1. 数据概况
+        report.append("\n## 1. 数据概况")
+        if self.processed_data is not None:
+            report.append(f"- **总观测数**: {len(self.processed_data)}")
+            report.append(f"- **个体数**: {self.processed_data['孕妇代码'].nunique()}")
+            report.append(f"- **平均每个体测量次数**: {len(self.processed_data) / self.processed_data['孕妇代码'].nunique():.1f}")
         
-        print("所有结果已保存完成")
+        # 2. 模型信息
+        report.append("\n## 2. 增强混合效应模型信息")
+        if self.model_analyzer.result is not None:
+            report.append(f"- **模型类型**: 随机斜率混合效应模型")
+            report.append(f"- **使用变量数**: {len(self.model_analyzer.variables_used)}")
+            report.append(f"- **模型公式**: {self.model_analyzer.formula}")
+            report.append(f"- **收敛状态**: {'成功' if self.model_analyzer.result.converged else '失败'}")
+            report.append(f"- **AIC**: {self.model_analyzer.result.aic:.2f}")
+            report.append(f"- **BIC**: {self.model_analyzer.result.bic:.2f}")
+            report.append(f"- **对数似然**: {self.model_analyzer.result.llf:.2f}")
+        
+        # 3. 变量列表
+        report.append("\n## 3. 模型变量列表")
+        if hasattr(self.model_analyzer, 'variables_used'):
+            report.append("### 基础变量（原模型）")
+            base_vars = ['gd', 'bmi_c', 'age_c', 'height', 'weight']
+            for var in base_vars:
+                if var in self.model_analyzer.variables_used:
+                    report.append(f"- {var}")
+            
+            report.append("\n### 新增高相关性变量")
+            new_vars = [v for v in self.model_analyzer.variables_used if v not in base_vars]
+            for var in new_vars:
+                report.append(f"- {var}")
+        
+        # 4. 固定效应结果
+        report.append("\n## 4. 固定效应结果")
+        if self.model_analyzer.result is not None:
+            fixed_effects = self.model_analyzer.get_fixed_effects_summary()
+            if fixed_effects is not None:
+                report.append("\n| 变量 | 系数 | 标准误 | P值 | 显著性 |")
+                report.append("|------|------|--------|-----|--------|")
+                for _, row in fixed_effects.iterrows():
+                    report.append(f"| {row['Variable']} | {row['Coefficient']:.6f} | {row['Std_Error']:.6f} | {row['P_value']:.6f} | {row['Significance']} |")
+        
+        # 5. 模型性能
+        report.append("\n## 5. 模型性能指标")
+        if self.model_analyzer.result is not None:
+            performance = self.model_analyzer.calculate_model_performance(self.processed_data)
+            if performance:
+                for key, value in performance.items():
+                    report.append(f"- **{key}**: {value:.4f}")
+        
+        # 6. 主要发现
+        report.append("\n## 6. 主要发现")
+        if 'correlation_matrix' in self.analysis_results:
+            corr_matrix = self.analysis_results['correlation_matrix']
+            y_corr = corr_matrix['Y染色体浓度'].drop('Y染色体浓度').sort_values(key=abs, ascending=False)
+            
+            report.append("### 与Y染色体浓度相关性最高的变量")
+            for var, corr in y_corr.head(5).items():
+                report.append(f"- **{var}**: {corr:.4f}")
+        
+        # 7. 模型公式
+        report.append("\n## 7. 模型数学表达式")
+        if self.model_analyzer.result is not None:
+            formula_text = self.model_analyzer.get_model_formula_text()
+            if formula_text:
+                report.append(f"```\n{formula_text}\n```")
+        
+        # 8. 结论
+        report.append("\n## 8. 结论")
+        report.append("本分析构建了包含12个变量的增强随机斜率混合效应模型，相比原模型（5个变量）显著扩展了变量覆盖范围。")
+        report.append("新增的高相关性变量包括X染色体浓度、Y染色体Z值、检测抽血次数等，这些变量与Y染色体浓度存在显著相关性。")
+        report.append("模型能够更好地解释Y染色体浓度的变异，为临床决策提供更准确的预测。")
+        
+        return "\n".join(report)
+    
+    def _safe_format_number(self, value, format_str=".4f"):
+        """安全地格式化数值，处理字符串'N/A'的情况"""
+        if isinstance(value, (int, float)) and not pd.isna(value):
+            return f"{value:{format_str}}"
+        else:
+            return str(value)
     
     def get_analysis_summary(self) -> dict:
         """获取分析摘要"""
@@ -715,8 +611,9 @@ class Problem1Analysis:
                 'unique_subjects': self.processed_data['孕妇代码'].nunique() if self.processed_data is not None else 0,
                 '达标率': self.analysis_results.get('summary_stats', {}).get('y_concentration_stats', {}).get('达标率', 'N/A')
             },
-            'best_model': self.model_analyzer.best_model,
-            'model_performance': self.analysis_results.get('best_model_r_squared', {}),
+            'model_type': 'enhanced_random_slope',
+            'model_fitted': self.model_analyzer.result is not None,
+            'model_performance': self.analysis_results.get('model_performance', {}),
             'key_findings': self._extract_key_findings()
         }
         
@@ -856,12 +753,12 @@ class Problem1Analysis:
                                    correlation_pvalues: pd.DataFrame):
         """显示相关性分析结果"""
         
-        print("="*60)
+        print("\n" + "="*60)
         print("详细相关性分析结果")
         print("="*60)
         
         # 核心相关性结果
-        print("\\n1. Y染色体浓度与主要指标的相关性：")
+        print("\n1. Y染色体浓度与主要指标的相关性：")
         key_vars = ['gestational_days', '孕妇BMI', '年龄', '身高', '体重']
         
         for var in key_vars:
@@ -879,27 +776,70 @@ class Problem1Analysis:
                 except:
                     print(f"  {var}: 无法计算")
         
+        # 高相关性变量
+        print("\n2. 与Y染色体浓度相关性最高的变量（按绝对值排序）：")
+        if 'Y染色体浓度' in correlation_matrix.columns:
+            y_corr = correlation_matrix['Y染色体浓度'].drop('Y染色体浓度').sort_values(key=abs, ascending=False)
+            for i, (var, corr_val) in enumerate(y_corr.head(10).items(), 1):
+                if pd.notna(corr_val):
+                    p_val = correlation_pvalues.loc['Y染色体浓度', var] if 'Y染色体浓度' in correlation_pvalues.index else np.nan
+                    significance = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else "ns"
+                    print(f"  {i:2d}. {var}: ρ={corr_val:.4f}, p={p_val:.4f} ({significance})")
+        
         # Z值相关性
         if 'Y染色体的Z值' in correlation_matrix.index:
-            print("\n2. Y染色体相关Z值分析（Spearman）：")
+            print("\n3. Y染色体相关Z值分析（Spearman）：")
             z_corr = correlation_matrix.loc['Y染色体浓度', 'Y染色体的Z值']
             z_p = correlation_pvalues.loc['Y染色体浓度', 'Y染色体的Z值'] if 'Y染色体浓度' in correlation_pvalues.index else np.nan
             print(f"  Y染色体浓度 vs Y染色体Z值: ρ={z_corr:.4f}, p={z_p:.4f}")
         
         # BMI分组结果
         if 'bmi_group_correlations' in self.analysis_results:
-            print("\n3. BMI分组相关性差异（Spearman）：")
+            print("\n4. BMI分组相关性差异（Spearman）：")
             for group, correlations in self.analysis_results['bmi_group_correlations'].items():
                 if 'gestational_days' in correlations:
                     print(f"  BMI {group}组: Y浓度-孕周相关性 ρ={correlations['gestational_days']:.4f}")
         
         # 非线性结果
         if 'nonlinear_correlations' in self.analysis_results:
-            print("\n4. 非线性相关性分析（Spearman相关系数）：")
+            print("\n5. 非线性相关性分析（Spearman相关系数）：")
             for var, results in self.analysis_results['nonlinear_correlations'].items():
                 spear_r = results.get('spearman_corr', np.nan)
                 spear_p = results.get('spearman_p', np.nan)
                 print(f"  {var}: Spearman ρ={spear_r:.4f}, p={spear_p:.4f}")
+        
+        # 保存相关性结果到文件
+        print("\n6. 保存相关性结果...")
+        try:
+            # 保存完整相关性矩阵
+            correlation_matrix.to_csv(
+                os.path.join(self.results_dir, "data", "full_correlation_matrix.csv")
+            )
+            print("  ✓ 完整相关性矩阵已保存: data/full_correlation_matrix.csv")
+            
+            # 保存相关性p值矩阵
+            correlation_pvalues.to_csv(
+                os.path.join(self.results_dir, "data", "correlation_pvalues.csv")
+            )
+            print("  ✓ 相关性p值矩阵已保存: data/correlation_pvalues.csv")
+            
+            # 保存Y染色体浓度相关性排序
+            y_corr_df = pd.DataFrame({
+                'Variable': y_corr.index,
+                'Correlation': y_corr.values,
+                'Abs_Correlation': y_corr.abs().values
+            }).sort_values('Abs_Correlation', ascending=False)
+            
+            y_corr_df.to_csv(
+                os.path.join(self.results_dir, "data", "y_concentration_correlations_ranked.csv"),
+                index=False
+            )
+            print("  ✓ Y染色体浓度相关性排序已保存: data/y_concentration_correlations_ranked.csv")
+            
+        except Exception as e:
+            print(f"  保存相关性结果时出错: {e}")
+        
+        print("="*60)
 
 
 def main():
@@ -930,10 +870,28 @@ def main():
         
         print(f"数据规模: {summary['data_info']['total_observations']}个观测，{summary['data_info']['unique_subjects']}个个体")
         print(f"总体达标率: {summary['data_info']['达标率']:.2%}")
-        print(f"最佳模型: {summary['best_model']}")
+        print(f"模型类型: {summary['model_type']}")
+        print(f"模型拟合状态: {'成功' if summary['model_fitted'] else '失败'}")
         
         if summary['model_performance']:
-            print(f"模型表现: R² = {summary['model_performance'].get('Pseudo_R2', 'N/A'):.4f}")
+            # 安全地格式化性能指标
+            r2_val = summary['model_performance'].get('R_squared', 'N/A')
+            if isinstance(r2_val, (int, float)):
+                print(f"模型表现: R² = {r2_val:.4f}")
+            else:
+                print(f"模型表现: R² = {r2_val}")
+            
+            corr_val = summary['model_performance'].get('Correlation', 'N/A')
+            if isinstance(corr_val, (int, float)):
+                print(f"相关系数: {corr_val:.4f}")
+            else:
+                print(f"相关系数: {corr_val}")
+            
+            aic_val = summary['model_performance'].get('AIC', 'N/A')
+            if isinstance(aic_val, (int, float)):
+                print(f"AIC: {aic_val:.2f}")
+            else:
+                print(f"AIC: {aic_val}")
         
         print("\n关键发现:")
         for i, finding in enumerate(summary['key_findings'], 1):

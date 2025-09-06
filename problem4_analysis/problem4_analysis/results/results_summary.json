@@ -1,0 +1,118 @@
+{
+  "analysis_time": "2025-09-06T10:29:08.225436",
+  "total_samples": 605,
+  "unique_patients": 147,
+  "aneuploidy_count": 67,
+  "healthy_count": 605,
+  "z_value_statistics": {
+    "z_13": {
+      "mean": 0.4347932442297521,
+      "std": 1.3304145611216656,
+      "min": -3.143221872,
+      "max": 7.194432708,
+      "median": 0.303587253,
+      "q25": -0.444223046,
+      "q75": 1.314557021,
+      "outliers_3std": 5.0
+    },
+    "z_18": {
+      "mean": 0.8040434034198347,
+      "std": 1.2842591089814746,
+      "min": -2.312643722,
+      "max": 5.380943783,
+      "median": 0.700946782,
+      "q25": -0.061295183,
+      "q75": 1.609503449,
+      "outliers_3std": 6.0
+    },
+    "z_21": {
+      "mean": -0.11744321538181819,
+      "std": 1.1249545278880875,
+      "min": -4.255845052,
+      "max": 2.662144445,
+      "median": -0.141454103,
+      "q25": -0.824381393,
+      "q75": 0.688025783,
+      "outliers_3std": 1.0
+    },
+    "z_x": {
+      "mean": 0.4772221146198347,
+      "std": 1.3005205876538508,
+      "min": -8.298997929,
+      "max": 10.28612325,
+      "median": 0.527573404,
+      "q25": -0.339565512,
+      "q75": 1.245971478,
+      "outliers_3std": 5.0
+    }
+  },
+  "gc_content_statistics": {
+    "gc_13": {
+      "mean": 0.3790796892776859,
+      "std": 0.004387933620289502,
+      "min": 0.350101203,
+      "max": 0.426436633,
+      "normal_range_40_60": 2.0,
+      "abnormal_low": 603.0,
+      "abnormal_high": 0.0
+    },
+    "gc_18": {
+      "mean": 0.3919494467454545,
+      "std": 0.004184222108449378,
+      "min": 0.361057311,
+      "max": 0.433851272,
+      "normal_range_40_60": 11.0,
+      "abnormal_low": 594.0,
+      "abnormal_high": 0.0
+    },
+    "gc_21": {
+      "mean": 0.4012309752826446,
+      "std": 0.005044729509326476,
+      "min": 0.36467278,
+      "max": 0.449964464,
+      "normal_range_40_60": 383.0,
+      "abnormal_low": 222.0,
+      "abnormal_high": 0.0
+    },
+    "gc_content": {
+      "mean": 0.401088925785124,
+      "std": 0.004429767867342409,
+      "min": 0.367701,
+      "max": 0.4434829,
+      "normal_range_40_60": 385.0,
+      "abnormal_low": 220.0,
+      "abnormal_high": 0.0
+    }
+  },
+  "correlations_with_aneuploidy": {
+    "x_concentration": -0.31877024767645123,
+    "filtered_reads_ratio": 0.1416663225111533,
+    "gc_13": 0.10733715898449195,
+    "age": -0.07733843558611456,
+    "bmi": -0.07697950310548184,
+    "gc_18": 0.07128553865948505,
+    "z_x": -0.06078142005949943,
+    "gc_content": -0.059955587341298966,
+    "gestational_weeks": 0.05795876281926718,
+    "z_21": 0.05394227116967863,
+    "z_13": -0.043217917758039154,
+    "total_reads": -0.03243192634448672,
+    "gc_21": 0.017540846343661754,
+    "mapping_ratio": 0.010148555270050425,
+    "z_18": -0.007629880591933858
+  },
+  "figure_files": [
+    "problem4_analysis/results/figures\\basic_distributions.png",
+    "problem4_analysis/results/figures\\z_value_distributions.png",
+    "problem4_analysis/results/figures\\z_value_boxplot.png",
+    "problem4_analysis/results/figures\\z_value_correlation.png",
+    "problem4_analysis/results/figures\\gc_content_distributions.png",
+    "problem4_analysis/results/figures\\gc_content_vs_aneuploidy.png",
+    "problem4_analysis/results/figures\\bmi_analysis.png",
+    "problem4_analysis/results/figures\\gestational_weeks_analysis.png",
+    "problem4_analysis/results/figures\\correlation_heatmap.png",
+    "problem4_analysis/results/figures\\aneuploidy_correlation.png",
+    "problem4_analysis/results/figures\\z_threshold_analysis.png",
+    "problem4_analysis/results/figures\\detection_strategy_comparison.png"
+  ]
+}
