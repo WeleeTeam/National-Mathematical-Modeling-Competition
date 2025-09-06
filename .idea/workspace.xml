@@ -4,21 +4,65 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dfb84748-37ba-4b35-a80a-8449dca65065" name="更改" comment="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性" />
+    <list default="true" id="dfb84748-37ba-4b35-a80a-8449dca65065" name="更改" comment="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性">
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/feature_importance.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/feature_ranking.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/group_statistics.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/model_performance.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/roc_curves.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/selected_features.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/National-Mathematical-Modeling-Competition.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/National-Mathematical-Modeling-Competition.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/data/correlation_matrix.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/data/gc_content_statistics.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/data/processed_female_data.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/data/z_value_statistics.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/results_summary.json" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="32L5tlWeNz62nfx5AWMj2DCO0no" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "git-widget-placeholder": "main",
-    "node.js.selected.package.tslint": "(autodetect)"
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python.improved_analysis.executor&quot;: &quot;Run&quot;,
+    &quot;Python.problem4_analysis.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;F:/opensource/hhh&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.19072.16" />
+        <option value="bundled-python-sdk-8336bb23522e-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.19072.16" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task id="LOCAL-00001" summary="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性">
       <option name="closed" value="true" />
@@ -28,10 +72,25 @@
       <option name="project" value="LOCAL" />
       <updated>1757186077354</updated>
     </task>
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="dfb84748-37ba-4b35-a80a-8449dca65065" name="更改" comment="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性" />
+      <created>1757187228978</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1757187228978</updated>
+      <workItem from="1757187230039" duration="1471000" />
+      <workItem from="1757188733504" duration="5767000" />
+      <workItem from="1757195220838" duration="18000" />
+      <workItem from="1757195844695" duration="1340000" />
+    </task>
     <option name="localTasksCounter" value="2" />
     <servers />
   </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
   <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性" />
     <option name="LAST_COMMIT_MESSAGE" value="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性" />
   </component>
@@ -40,6 +99,8 @@
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$decision_tree_grouping.coverage" NAME="decision_tree_grouping 覆盖结果" MODIFIED="1757172357502" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$pure_problem2.coverage" NAME="pure_problem2 覆盖结果" MODIFIED="1757174728749" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$simple_problem2.coverage" NAME="simple_problem2 覆盖结果" MODIFIED="1757184751468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
+    <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$problem4_analysis.coverage" NAME="problem4_analysis 覆盖结果" MODIFIED="1757196916116" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem4_analysis" />
+    <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$improved_analysis.coverage" NAME="improved_analysis 覆盖结果" MODIFIED="1757194436758" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem4_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$main_problem3.coverage" NAME="main_problem3 覆盖结果" MODIFIED="1757184595909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem3_analysis" />
   </component>
 </project>
