@@ -1,16 +1,10 @@
 {
   "model_params": {
-    "intercept": -0.248662,
-    "gd_linear": -0.000797,
-    "gd_quadratic": 5e-06,
-    "bmi_centered": 0.011867,
-    "age_centered": -0.00057,
-    "height": 0.004788,
-    "weight": -0.005092
+    "intercept": 0.19265360321476893,
+    "gestational_days": -0.00043963604009710606,
+    "bmi": -0.0040930785959958785,
+    "gestational_days_bmi": 1.843713138617577e-05
   },
-  "center_params": {
-    "bmi_mean": 32.32,
-    "age_mean": 30.8
-  },
-  "threshold": 0.04
+  "threshold": 0.04,
+  "bmi_correlation": -0.13959425666749986
 }

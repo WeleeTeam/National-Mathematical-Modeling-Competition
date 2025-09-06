@@ -1,6 +1,7 @@
 """
-决策树分组模块
+简化决策树分组模块
 使用决策树算法优化BMI分组策略
+按新思路：以最早达标孕周天数作为分组依据，使用简化特征
 """
 
 import numpy as np
@@ -16,135 +17,112 @@ warnings.filterwarnings('ignore')
 
 
 class DecisionTreeGrouping:
-    """基于决策树的BMI分组优化器"""
+    """基于简化决策树的BMI分组优化器"""
     
     def __init__(self, max_groups: int = 5, min_samples_per_group: int = 20):
         """
         Parameters:
-        - max_groups: 最大分组数量（增加到5组以满足BMI分段约束）
-        - min_samples_per_group: 每组最小样本数（减少到20以允许更多分组）
+        - max_groups: 最大分组数量
+        - min_samples_per_group: 每组最小样本数
         """
         self.max_groups = max_groups
         self.min_samples_per_group = min_samples_per_group
         self.tree_model = None
         self.grouping_result = None
         
-    def prepare_features_for_grouping(self, data: pd.DataFrame, 
-                                    time_predictor, risk_model) -> pd.DataFrame:
+    def prepare_simplified_features_for_grouping(self, data: pd.DataFrame, 
+                                           time_predictor, risk_model) -> pd.DataFrame:
         """
-        为决策树准备特征数据（使用新的风险优化逻辑）
+        为决策树准备简化特征数据
+        新思路：以最早达标孕周天数作为分组依据，使用简化特征
         
         Parameters:
         - data: 原始数据
-        - time_predictor: 时间预测模型
+        - time_predictor: 简化时间预测模型
         - risk_model: 风险模型
         
         Returns:
-        - feature_df: 包含特征和目标变量的数据框
+        - feature_df: 包含简化特征和目标变量的数据框
         """
         features = []
         
+        print("=== 准备简化特征数据 ===")
+        
         for _, patient in data.iterrows():
-            # 基础特征
+            # 核心特征：只保留BMI作为主要决策变量
             bmi = patient['孕妇BMI']
-            age = patient['年龄']
-            height = patient['身高']
-            weight = patient['体重']
             
-            # 找到满足95%概率约束的最早时间
-            min_time_for_95_percent = time_predictor.find_time_for_success_probability(
-                bmi, age, height, weight, target_prob=risk_model.target_success_probability
-            )
-            
-            if min_time_for_95_percent is not None:
-                # 在约束范围内搜索最优时间
-                from scipy.optimize import minimize_scalar
+            try:
+                # 使用简化模型计算最早达标时间（只需BMI参数）
+                earliest_达标时间 = time_predictor.solve_达标时间(bmi=bmi)
                 
-                def risk_objective(t):
-                    risk_result = risk_model.calculate_total_risk(
-                        t, bmi, age, height, weight, time_predictor
-                    )
-                    return risk_result['total_risk']
-                
-                # 搜索范围：从满足约束的最早时间到合理的最大时间
-                search_min = min_time_for_95_percent
-                search_max = min(200, min_time_for_95_percent + 35)  # 最多延后5周
-                
-                try:
-                    result = minimize_scalar(
-                        risk_objective,
-                        bounds=(search_min, search_max),
-                        method='bounded'
+                if earliest_达标时间 is not None:
+                    # 计算95%概率约束时间
+                    constraint_time = time_predictor.find_time_for_success_probability(
+                        bmi=bmi, target_prob=risk_model.target_success_probability
                     )
                     
-                    optimal_test_time = result.x
-                    minimal_risk = result.fun
+                    # 在约束范围内搜索最优风险时间
+                    if constraint_time is not None:
+                        from scipy.optimize import minimize_scalar
+                        
+                        def risk_objective(t):
+                            # 使用简化的风险计算方法，删除年龄、身高、体重参数
+                            risk_result = risk_model.calculate_total_risk(
+                                t, bmi, time_predictor
+                            )
+                            return risk_result['total_risk']
+                        
+                        # 搜索范围：从约束时间到合理的最大时间
+                        search_min = constraint_time
+                        search_max = min(220, constraint_time + 35)  # 最多延后5周
+                        
+                        try:
+                            result = minimize_scalar(
+                                risk_objective,
+                                bounds=(search_min, search_max),
+                                method='bounded'
+                            )
+                            
+                            optimal_test_time = result.x
+                            minimal_risk = result.fun
+                            
+                        except:
+                            # 使用约束时间作为备用方案
+                            optimal_test_time = constraint_time
+                            minimal_risk = risk_objective(constraint_time)
+                    else:
+                        # 如果无法满足95%约束，使用达标时间
+                        optimal_test_time = earliest_达标时间
+                        minimal_risk = None
                     
-                    # 计算该最优时间点的详细信息
-                    risk_breakdown = risk_model.calculate_total_risk(
-                        optimal_test_time, bmi, age, height, weight, time_predictor
-                    )
-                    
+                    # 保存简化特征（按您要求的参数）
                     features.append({
                         '孕妇代码': patient['孕妇代码'],
-                        'BMI': bmi,
-                        '年龄': age,
-                        '身高': height,
-                        '体重': weight,
-                        'BMI平方': bmi ** 2,
-                        'BMI_age_interaction': bmi * age,
-                        '身高体重比': height / weight if weight > 0 else 0,
-                        '满足95%约束的最早时间': min_time_for_95_percent,
-                        '满足95%约束的最早周数': min_time_for_95_percent / 7,
+                        'BMI': bmi,  # 主要决策变量
+                        '最早达标时间': earliest_达标时间,
+                        '最早达标周数': earliest_达标时间 / 7,  # 主要分组依据
+                        '95%约束时间': constraint_time,
+                        '95%约束周数': constraint_time / 7 if constraint_time else None,
                         '最优检测时间': optimal_test_time,
                         '最优检测周数': optimal_test_time / 7,
-                        '最小总风险': minimal_risk,
-                        '最优时点成功概率': risk_breakdown['success_probability'],
-                        '最优时点检测失败风险': risk_breakdown['detection_failure_risk'],
-                        '最优时点延误风险': risk_breakdown['delay_risk'],
-                        '满足约束': risk_breakdown['satisfies_constraint'],
-                        '风险敏感指数': minimal_risk / (optimal_test_time / 7),  # 复合指标：单位时间风险
-                        'BMI_风险_interaction': bmi * minimal_risk  # BMI与风险的交互项
+                        '最小风险': minimal_risk if minimal_risk else 0,
+                        '满足95%约束': constraint_time is not None
                     })
                     
-                except Exception as e:
-                    print(f"患者 {patient.get('孕妇代码', 'Unknown')} 优化失败: {e}")
-                    # 使用备用方案
-                    fallback_time = min_time_for_95_percent
-                    fallback_risk = risk_objective(fallback_time)
-                    risk_breakdown = risk_model.calculate_total_risk(
-                        fallback_time, bmi, age, height, weight, time_predictor
-                    )
+                else:
+                    print(f"患者 {patient.get('孕妇代码', 'Unknown')} 无法在合理时间内达标")
                     
-                    features.append({
-                        '孕妇代码': patient['孕妇代码'],
-                        'BMI': bmi,
-                        '年龄': age,
-                        '身高': height,
-                        '体重': weight,
-                        'BMI平方': bmi ** 2,
-                        'BMI_age_interaction': bmi * age,
-                        '身高体重比': height / weight if weight > 0 else 0,
-                        '满足95%约束的最早时间': min_time_for_95_percent,
-                        '满足95%约束的最早周数': min_time_for_95_percent / 7,
-                        '最优检测时间': fallback_time,
-                        '最优检测周数': fallback_time / 7,
-                        '最小总风险': fallback_risk,
-                        '最优时点成功概率': risk_breakdown['success_probability'],
-                        '最优时点检测失败风险': risk_breakdown['detection_failure_risk'],
-                        '最优时点延误风险': risk_breakdown['delay_risk'],
-                        '满足约束': risk_breakdown['satisfies_constraint'],
-                        '风险敏感指数': fallback_risk / (fallback_time / 7),
-                        'BMI_风险_interaction': bmi * fallback_risk
-                    })
-            else:
-                print(f"患者 {patient.get('孕妇代码', 'Unknown')} 无法在合理时间内达到95%概率要求")
+            except Exception as e:
+                print(f"患者 {patient.get('孕妇代码', 'Unknown')} 处理失败: {e}")
         
+        print(f"成功处理 {len(features)} 个患者")
         return pd.DataFrame(features)
     
-    def optimize_grouping_with_decision_tree(self, feature_df: pd.DataFrame) -> Dict:
+    def optimize_grouping_with_simplified_decision_tree(self, feature_df: pd.DataFrame) -> Dict:
         """
-        使用决策树优化分组策略
+        使用简化决策树优化分组策略
+        新思路：以最早达标周数作为分组目标，BMI作为主要特征
         
         Parameters:
         - feature_df: 特征数据框
@@ -152,110 +130,127 @@ class DecisionTreeGrouping:
         Returns:
         - grouping_result: 分组优化结果
         """
-        # 选择用于分组的特征（使用新的特征列）
-        grouping_features = ['BMI', '年龄', '身高', '体重', 'BMI平方', 'BMI_age_interaction', 
-                           '身高体重比', '风险敏感指数', 'BMI_风险_interaction']
+        print("=== 使用简化决策树进行分组优化 ===")
         
-        # 确保所有特征列都存在
-        available_features = [f for f in grouping_features if f in feature_df.columns]
-        X = feature_df[available_features]
+        # 简化特征选择：只使用BMI作为主要分组特征
+        grouping_features = ['BMI']  # 按新思路只使用BMI作为决策变量
         
-        # 目标变量：最优检测周数（这是我们想要预测和分组的目标）
-        y = feature_df['最优检测周数']
+        X = feature_df[grouping_features]
+        
+        # 目标变量：最早达标周数（按您的要求作为分组依据）
+        y = feature_df['最早达标周数']
+        
+        print(f"使用特征: {grouping_features}")
+        print(f"目标变量: 最早达标周数")
+        print(f"数据shape: {X.shape}")
 
-        # 使用分层采样平衡样本分布
-        from sklearn.model_selection import StratifiedKFold
-        
-        # 创建BMI分层标签（用于分层采样）
-        bmi_quantiles = np.quantile(feature_df['BMI'], [0.33, 0.67])
-        bmi_strata = np.where(feature_df['BMI'] <= bmi_quantiles[0], 0,
-                             np.where(feature_df['BMI'] <= bmi_quantiles[1], 1, 2))
-        
         # 尝试不同的树深度，找到最优分组
         best_score = -np.inf
         best_tree = None
         best_depth = None
         
-        # 限制树深度为2-3，避免过拟合
-        for max_depth in range(2, min(self.max_groups + 1, 4)):
-            # 创建决策树回归器，使用更保守的参数
+        print("正在搜索最优决策树深度...")
+        
+        # 扩大树深度范围，确保能生成足够的分组
+        for max_depth in range(3, self.max_groups + 2):  # 从深度3开始，最大到max_groups+1
+            # 创建决策树回归器，放宽参数以生成更多组
             tree = DecisionTreeRegressor(
                 max_depth=max_depth,
-                min_samples_leaf=max(self.min_samples_per_group, len(feature_df) // 20),  # 动态调整最小样本数
-                min_samples_split=max(self.min_samples_per_group * 2, len(feature_df) // 10),
-                max_features='sqrt',  # 限制特征数量，防止过拟合
+                min_samples_leaf=max(8, len(feature_df) // 30),  # 进一步降低每个叶子的最小样本数
+                min_samples_split=max(15, len(feature_df) // 15),  # 进一步降低分裂所需的最小样本数
                 random_state=42,
-                ccp_alpha=0.01  # 添加剪枝参数
+                ccp_alpha=0.0  # 完全不剪枝，允许完全展开的树结构
             )
             
-            # 使用分层交叉验证评估
+            # 使用交叉验证评估（简化版本）
             try:
-                skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
-                scores = cross_val_score(tree, X, y, cv=skf.split(X, bmi_strata), 
-                                       scoring='neg_mean_squared_error')
-                avg_score = scores.mean()
-            except:
-                # 如果分层采样失败，使用普通交叉验证
                 scores = cross_val_score(tree, X, y, cv=3, scoring='neg_mean_squared_error')
                 avg_score = scores.mean()
-            
-            if avg_score > best_score:
-                best_score = avg_score
-                best_tree = tree
-                best_depth = max_depth
+                
+                print(f"深度 {max_depth}: CV分数 = {avg_score:.4f}")
+                
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_tree = tree
+                    best_depth = max_depth
+                    
+            except Exception as e:
+                print(f"深度 {max_depth} 评估失败: {e}")
         
         # 用最佳树拟合完整数据
-        best_tree.fit(X, y)
-        self.tree_model = best_tree
-        
-        # 获取叶节点分组
-        leaf_ids = best_tree.apply(X)
-        unique_leaves = np.unique(leaf_ids)
-        
-        # 创建分组映射
-        groups = {}
-        group_stats = {}
-        
-        for i, leaf_id in enumerate(unique_leaves):
-            mask = leaf_ids == leaf_id
-            group_data = feature_df[mask]
+        if best_tree is not None:
+            best_tree.fit(X, y)
+            self.tree_model = best_tree
             
-            group_name = f"Group_{i+1}"
-            groups[group_name] = {
-                'indices': feature_df[mask].index.tolist(),
-                'data': group_data,
-                'leaf_id': leaf_id
-            }
+            print(f"最佳决策树深度: {best_depth}, 分数: {best_score:.4f}")
             
-            # 计算组统计信息
-            group_stats[group_name] = {
-                'sample_size': len(group_data),
-                'bmi_range': (group_data['BMI'].min(), group_data['BMI'].max()),
-                'bmi_mean': group_data['BMI'].mean(),
-                'age_range': (group_data['年龄'].min(), group_data['年龄'].max()),
-                'optimal_test_time_mean': group_data['最优检测周数'].mean(),
-                'optimal_test_time_std': group_data['最优检测周数'].std(),
-                'minimal_risk_mean': group_data['最小总风险'].mean(),
-                'constraint_satisfaction_rate': group_data['满足约束'].mean(),
-                'success_probability_mean': group_data['最优时点成功概率'].mean()
-            }
+            # 获取叶节点分组
+            leaf_ids = best_tree.apply(X)
+            unique_leaves = np.unique(leaf_ids)
+            
+            print(f"决策树生成 {len(unique_leaves)} 个叶节点")
+            
+            # 创建分组映射
+            groups = {}
+            group_stats = {}
+            
+            for i, leaf_id in enumerate(unique_leaves):
+                mask = leaf_ids == leaf_id
+                group_data = feature_df[mask]
+                
+                group_name = f"Group_{i+1}"
+                groups[group_name] = {
+                    'indices': feature_df[mask].index.tolist(),
+                    'data': group_data,
+                    'leaf_id': leaf_id
+                }
+                
+                # 计算简化的组统计信息
+                group_stats[group_name] = {
+                    'sample_size': len(group_data),
+                    'bmi_range': (group_data['BMI'].min(), group_data['BMI'].max()),
+                    'bmi_mean': group_data['BMI'].mean(),
+                    'earliest_达标时间_mean': group_data['最早达标周数'].mean(),  # 主要分组依据
+                    'earliest_达标时间_std': group_data['最早达标周数'].std(),
+                    'optimal_test_time_mean': group_data['最优检测周数'].mean(),
+                    'optimal_test_time_std': group_data['最优检测周数'].std(),
+                    'minimal_risk_mean': group_data['最小风险'].mean(),
+                    'constraint_satisfaction_rate': group_data['满足95%约束'].mean()
+                }
         
-        # 后处理：重新平衡样本分布
-        groups, group_stats = self._rebalance_groups(groups, group_stats, feature_df)
+            # 删除样本重平衡代码
 
-        self.grouping_result = {
-            'tree_model': best_tree,
-            'best_depth': best_depth,
-            'best_cv_score': best_score,
-            'groups': groups,
-            'group_stats': group_stats,
-            'feature_names': available_features,  # 保存实际使用的特征名称
-            'feature_importance': dict(zip(available_features, best_tree.feature_importances_)),
-            'tree_rules': export_text(best_tree, feature_names=available_features)
-        }
+            self.grouping_result = {
+                'tree_model': best_tree,
+                'best_depth': best_depth,
+                'best_cv_score': best_score,
+                'groups': groups,
+                'group_stats': group_stats,
+                'feature_names': grouping_features,  # 使用简化的特征名称
+                'feature_importance': dict(zip(grouping_features, best_tree.feature_importances_)),
+                'total_groups': len(groups)
+            }
+            
+            print(f"分组完成，共生成 {len(groups)} 个组")
+            
+        else:
+            print("决策树拟合失败")
+            # 返回空的分组结果
+            self.grouping_result = {
+                'tree_model': None,
+                'best_depth': None,
+                'best_cv_score': None,
+                'groups': {},
+                'group_stats': {},
+                'feature_names': [],
+                'feature_importance': {},
+                'total_groups': 0
+            }
         
         return self.grouping_result
     
+
+
     def _rebalance_groups(self, groups: Dict, group_stats: Dict, feature_df: pd.DataFrame) -> Tuple[Dict, Dict]:
         """
         重新平衡样本分布，使用基于分位数的分组方法确保满足BMI分段约束
@@ -334,94 +329,6 @@ class DecisionTreeGrouping:
             print(f"样本分布相对均匀，保持原分组")
             return groups, group_stats
 
-    def refine_grouping_with_bmi_bounds(self, feature_df: pd.DataFrame) -> Dict:
-        """
-        基于决策树结果，细化BMI分组边界（确保满足三个约束条件）
-        使用严格的分段约束方法，确保相邻且不交
-        
-        Parameters:
-        - feature_df: 特征数据框
-        
-        Returns:
-        - refined_groups: 细化的分组结果
-        """
-        if self.grouping_result is None:
-            raise ValueError("请先运行optimize_grouping_with_decision_tree")
-        
-        # 首先收集所有组的BMI信息
-        group_bmi_info = []
-        for group_name, group_info in self.grouping_result['groups'].items():
-            group_data = group_info['data']
-            bmi_min = group_data['BMI'].min()
-            bmi_max = group_data['BMI'].max()
-            bmi_mean = group_data['BMI'].mean()
-            
-            group_bmi_info.append({
-                'group_name': group_name,
-                'group_data': group_data,
-                'bmi_min': bmi_min,
-                'bmi_max': bmi_max,
-                'bmi_mean': bmi_mean,
-                'sample_size': len(group_data)
-            })
-        
-        # 按BMI均值排序
-        group_bmi_info.sort(key=lambda x: x['bmi_mean'])
-        
-        # 使用严格的分段约束方法
-        refined_groups = {}
-        bmi_groups = []  # 用于约束检查
-        
-        # 获取全局BMI范围
-        all_bmi_values = feature_df['BMI'].values
-        global_bmi_min = all_bmi_values.min()
-        global_bmi_max = all_bmi_values.max()
-        
-        # 计算严格的分段边界点
-        n_groups = len(group_bmi_info)
-        boundary_points = np.linspace(global_bmi_min, global_bmi_max, n_groups + 1)
-        
-        # 为每个组重新定义边界，确保严格相邻且不交
-        for i, group_info in enumerate(group_bmi_info):
-            group_name = group_info['group_name']
-            group_data = group_info['group_data']
-            
-            # 使用计算出的边界点
-            new_bmi_min = boundary_points[i]
-            new_bmi_max = boundary_points[i + 1]
-            
-            # 对于最后一组，确保包含最大值
-            if i == n_groups - 1:
-                new_bmi_max = global_bmi_max
-            
-            # 计算该组的推荐检测时间范围
-            optimal_times = group_data['最优检测周数']
-            recommended_time = optimal_times.mean()
-            time_std = optimal_times.std()
-            
-            refined_groups[group_name] = {
-                'bmi_range': (new_bmi_min, new_bmi_max),
-                'bmi_interval': f"[{new_bmi_min:.1f}, {new_bmi_max:.1f}]",
-                'bmi_mean': group_info['bmi_mean'],
-                'sample_size': group_info['sample_size'],
-                'recommended_test_time_weeks': recommended_time,
-                'test_time_std': time_std,
-                'test_time_range': (recommended_time - time_std, recommended_time + time_std),
-                'expected_minimal_risk': group_data['最小总风险'].mean(),
-                'risk_std': group_data['最小总风险'].std(),
-                'constraint_satisfaction_rate': group_data['满足约束'].mean(),
-                'average_success_probability': group_data['最优时点成功概率'].mean(),
-                'group_data': group_data
-            }
-            
-            # 收集BMI分组信息用于约束检查
-            bmi_groups.append((new_bmi_min, new_bmi_max))
-        
-        # 验证分段约束
-        print(f"BMI分段边界点: {boundary_points}")
-        print(f"分组边界: {bmi_groups}")
-        
-        return refined_groups
     
     def validate_bmi_segmentation_constraints(self, refined_groups: Dict) -> Dict:
         """
@@ -583,6 +490,18 @@ if __name__ == "__main__":
         '身高': np.random.normal(165, 8, 100),
         '体重': np.random.normal(70, 10, 100)
     })
+
+
+if __name__ == "__main__":
+    # 测试模块
+    test_data = pd.DataFrame({
+        '孕妇代码': ['A001', 'A002', 'A003'],
+        '孕妇BMI': [25.0, 30.0, 35.0],
+        '最早达标周数': [10.0, 12.0, 15.0],
+        '最优检测周数': [11.0, 13.0, 16.0],
+        '最小风险': [0.1, 0.2, 0.3],
+        '满足95%约束': [True, True, False]
+    })
     
     grouping_optimizer = DecisionTreeGrouping()
-    print(f"初始化完成，最大分组数: {grouping_optimizer.max_groups}")
+    print(f"简化决策树分组器初始化完成，最大分组数: {grouping_optimizer.max_groups}")

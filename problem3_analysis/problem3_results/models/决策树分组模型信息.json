@@ -1,0 +1,27 @@
+{
+  "model_type": "DecisionTree",
+  "n_clusters": 5,
+  "score": -0.4629811153700249,
+  "feature_names": [
+    "BMI",
+    "年龄",
+    "身高",
+    "体重",
+    "BMI平方",
+    "BMI_age_interaction",
+    "身高体重比",
+    "BMI_height_interaction",
+    "BMI_weight_interaction",
+    "age_height_interaction",
+    "age_weight_interaction",
+    "多因素综合评分",
+    "BMI评分",
+    "年龄评分",
+    "身高评分",
+    "体重评分",
+    "质量评分",
+    "X染色体浓度评分",
+    "风险敏感指数",
+    "多因素_风险_interaction"
+  ]
+}
