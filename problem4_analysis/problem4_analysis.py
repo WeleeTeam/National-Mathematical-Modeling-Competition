@@ -439,8 +439,8 @@ class Problem4Analyzer:
         return scores_df_sorted
         
     def build_cost_sensitive_models(self):
-        """构建代价敏感学习模型"""
-        print("\n=== 构建代价敏感学习模型 ===")
+        """构建集成神经网络模型"""
+        print("\n=== 构建集成神经网络模型 ===")
         
         # 准备数据
         X = self.data[self.selected_features]
@@ -459,57 +459,88 @@ class Problem4Analyzer:
         class_weight_dict = {0: class_weights[0], 1: class_weights[1]}
         print(f"类别权重: {class_weight_dict}")
         
-        # 使用神经网络进行女胎异常判定
-        print("使用原始数据训练神经网络模型...")
         print(f"训练集大小: {X_train_scaled.shape[0]}")
         print(f"异常样本比例: {y_train.sum() / len(y_train):.3f}")
         
-        # 构建优化的神经网络模型
+        # 构建多个不同架构的神经网络
         from sklearn.neural_network import MLPClassifier
-        model = MLPClassifier(
-            hidden_layer_sizes=(128, 64, 32),  # 三层隐藏层，增加神经元数量
-            activation='relu',
-            solver='adam',
-            alpha=0.001,  # 减少正则化，允许更复杂的模型
-            batch_size=16,  # 减小批次大小
-            learning_rate='adaptive',
-            learning_rate_init=0.0001,  # 降低学习率
-            max_iter=2000,  # 增加最大迭代次数
-            random_state=42,
-            early_stopping=True,
-            validation_fraction=0.2,
-            n_iter_no_change=50  # 增加耐心值
-        )
+        from sklearn.ensemble import VotingClassifier
+        
+        # 定义优化的单神经网络模型（基于效果最好的NN_Deep进行优化）
+        neural_networks = {
+            'NN_Optimized_Deep': MLPClassifier(
+                hidden_layer_sizes=(512, 256, 128, 64, 32),  # 五层更深的网络
+                activation='relu',
+                solver='adam',
+                alpha=0.00005,  # 减少正则化，允许更复杂的学习
+                batch_size=16,  # 减小批次大小，提高学习稳定性
+                learning_rate='adaptive',
+                learning_rate_init=0.0005,  # 降低初始学习率
+                max_iter=5000,  # 增加最大迭代次数
+                random_state=42,
+                early_stopping=True,
+                validation_fraction=0.15,  # 减少验证集比例，增加训练数据
+                n_iter_no_change=200,  # 增加耐心值
+                beta_1=0.9,  # Adam优化器参数
+                beta_2=0.999,
+                epsilon=1e-8
+            )
+        }
+        
+        # 训练优化的单神经网络模型
+        print("\n训练优化的深度神经网络模型...")
+        model_name = list(neural_networks.keys())[0]
+        model = neural_networks[model_name]
+        
+        print(f"模型架构: {model_name}")
+        print(f"网络结构: {model.hidden_layer_sizes}")
+        print(f"激活函数: {model.activation}")
+        print(f"优化器: {model.solver}")
+        print(f"正则化参数: {model.alpha}")
+        print(f"批次大小: {model.batch_size}")
+        print(f"最大迭代次数: {model.max_iter}")
         
         # 训练模型
-        print("\n训练神经网络模型...")
+        print("\n开始训练...")
         model.fit(X_train_scaled, y_train)
-        y_pred_proba = model.predict_proba(X_test_scaled)[:, 1]
+        
+        # 预测和评估
+        y_pred_proba_ensemble = model.predict_proba(X_test_scaled)[:, 1]
+        auc_ensemble = roc_auc_score(y_test, y_pred_proba_ensemble)
+        
+        print(f"\n训练完成!")
+        print(f"模型 AUC: {auc_ensemble:.3f}")
+        
+        # 检查是否收敛
+        if hasattr(model, 'n_iter_'):
+            print(f"实际迭代次数: {model.n_iter_}")
+            if model.n_iter_ == model.max_iter:
+                print("警告: 模型可能未完全收敛，考虑增加max_iter")
+            else:
+                print("模型已收敛")
+        
+        ensemble_model = model
         
         # 阈值优化
-        optimal_threshold = self.optimize_threshold(y_test, y_pred_proba)
-        y_pred_optimal = (y_pred_proba > optimal_threshold).astype(int)
-        
-        # 计算评估指标
-        auc_score = roc_auc_score(y_test, y_pred_proba)
+        optimal_threshold = self.optimize_threshold(y_test, y_pred_proba_ensemble)
+        y_pred_optimal = (y_pred_proba_ensemble > optimal_threshold).astype(int)
         
         # 交叉验证
-        cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='roc_auc')
+        cv_scores = cross_val_score(ensemble_model, X_train_scaled, y_train, cv=5, scoring='roc_auc')
         
         # 特征重要性分析
         feature_importance = None
-        if hasattr(model, 'coefs_'):
-            # 分析第一层权重作为特征重要性
-            first_layer_weights = np.abs(model.coefs_[0])
+        if hasattr(ensemble_model, 'coefs_'):
+            first_layer_weights = np.abs(ensemble_model.coefs_[0])
             feature_importance = np.mean(first_layer_weights, axis=1)
         
         results = {
-            'Neural Network': {
-                'model': model,
+            'Optimized Deep Neural Network': {
+                'model': ensemble_model,
                 'y_pred': y_pred_optimal,
-                'y_pred_proba': y_pred_proba,
+                'y_pred_proba': y_pred_proba_ensemble,
                 'y_test': y_test,
-                'auc_score': auc_score,
+                'auc_score': auc_ensemble,
                 'cv_mean': cv_scores.mean(),
                 'cv_std': cv_scores.std(),
                 'classification_report': classification_report(y_test, y_pred_optimal),
@@ -518,7 +549,8 @@ class Problem4Analyzer:
             }
         }
         
-        print(f"神经网络 AUC: {auc_score:.3f} (CV: {cv_scores.mean():.3f} ± {cv_scores.std():.3f})")
+        print(f"\n=== 最终结果 ===")
+        print(f"优化深度神经网络 AUC: {auc_ensemble:.3f} (CV: {cv_scores.mean():.3f} ± {cv_scores.std():.3f})")
         print(f"最优阈值: {optimal_threshold:.3f}")
         print(f"优化后分类报告:\n{classification_report(y_test, y_pred_optimal)}")
         
@@ -561,18 +593,31 @@ class Problem4Analyzer:
         
         # 2. ROC曲线比较
         if hasattr(self, 'models') and self.models:
-            plt.figure(figsize=(10, 8))
+            plt.figure(figsize=(12, 8))
             
+            # 绘制集成模型的ROC曲线
             for name, result in self.models.items():
                 if 'y_test' in result and 'y_pred_proba' in result:
                     fpr, tpr, _ = roc_curve(result['y_test'], result['y_pred_proba'])
-                    plt.plot(fpr, tpr, label=f'{name} (AUC = {result["auc_score"]:.3f})', linewidth=2)
+                    plt.plot(fpr, tpr, label=f'{name} (AUC = {result["auc_score"]:.3f})', linewidth=3)
+            
+            # 如果有单个模型，也绘制它们的ROC曲线
+            for name, result in self.models.items():
+                if 'individual_models' in result:
+                    for model_name, model in result['individual_models'].items():
+                        try:
+                            y_pred_proba = model.predict_proba(result['y_test'].index.map(lambda x: self.data.loc[x, self.selected_features].values).reshape(-1, len(self.selected_features)))[:, 1]
+                            fpr, tpr, _ = roc_curve(result['y_test'], y_pred_proba)
+                            plt.plot(fpr, tpr, label=f'{model_name} (AUC = {roc_auc_score(result["y_test"], y_pred_proba):.3f})', 
+                                   linewidth=1, alpha=0.7, linestyle='--')
+                        except:
+                            continue
             
             plt.plot([0, 1], [0, 1], 'k--', label='随机分类器', alpha=0.5)
             plt.xlabel('假正率 (FPR)')
             plt.ylabel('真正率 (TPR)')
-            plt.title('ROC曲线比较')
-            plt.legend()
+            plt.title('集成神经网络 ROC曲线比较')
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             plt.savefig('problem4_analysis/results/roc_curves.png', dpi=300, bbox_inches='tight')
