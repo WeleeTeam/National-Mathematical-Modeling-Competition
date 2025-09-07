@@ -4,6 +4,7 @@
 问题4：女胎异常判定分析
 基于五步法进行变量筛选，构建代价敏感学习模型
 """
+import os
 
 import pandas as pd
 import numpy as np
@@ -298,13 +299,13 @@ class Problem4Analyzer:
                 corr_value = stats['correlation']
                 if not np.isnan(corr_value):
                     feature_stats[feature]['correlations'].append(corr_value)
-                feature_stats[feature]['p_values'].append(stats['p_value'])
                     feature_stats[feature]['valid_groups'] += 1
+                feature_stats[feature]['p_values'].append(stats['p_value'])
                 
                 if stats['significant']:
                     feature_stats[feature]['significant_count'] += 1
                     
-                    if abs(corr_value) >= 0.15:  # 强相关阈值（按照图片方案）
+                if abs(corr_value) >= 0.15:  # 强相关阈值（按照图片方案）
                     feature_stats[feature]['strong_correlation_count'] += 1
         
         # 计算三个维度的得分
@@ -652,9 +653,9 @@ class Problem4Analyzer:
         axes[1, 2].set_xlabel('原始读段数')
         axes[1, 2].set_ylabel('GC含量')
         
-            plt.tight_layout()
+        plt.tight_layout()
         plt.savefig('problem4_analysis/results/data_distribution.png', dpi=300, bbox_inches='tight')
-            plt.close()
+        plt.close()
         
     def plot_bmi_group_analysis(self):
         """BMI分组分析可视化"""
@@ -725,6 +726,7 @@ class Problem4Analyzer:
         print("生成特征筛选过程图...")
         
         # 读取特征排名数据
+        import os
         if os.path.exists('problem4_analysis/results/feature_ranking.csv'):
             feature_ranking = pd.read_csv('problem4_analysis/results/feature_ranking.csv', index_col=0)
             
@@ -1029,9 +1031,9 @@ class Problem4Analyzer:
                     
                     break
                     
-                    plt.tight_layout()
+            plt.tight_layout()
             plt.savefig('problem4_analysis/results/prediction_distribution.png', dpi=300, bbox_inches='tight')
-                    plt.close()
+            plt.close()
     
     def plot_learning_curves(self):
         """学习曲线可视化"""
