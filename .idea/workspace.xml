@@ -5,14 +5,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dfb84748-37ba-4b35-a80a-8449dca65065" name="更改" comment="更新多因素敏感性分析报告，增加中文标题和表格格式，提升可读性">
+      <change afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/correlations.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/comprehensive_dashboard.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/comprehensive_dashboard.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/confusion_matrix.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/confusion_matrix.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/feature_importance.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/feature_importance.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/group_statistics.csv" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/group_statistics.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/learning_curves.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/learning_curves.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/model_performance.csv" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/model_performance.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/model_performance.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/model_performance.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/selected_features.png" beforeDir="false" afterPath="$PROJECT_DIR$/problem4_analysis/problem4_analysis/results/selected_features.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -32,9 +47,10 @@
   &quot;keyToString&quot;: {
     &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
     &quot;Python.improved_analysis.executor&quot;: &quot;Run&quot;,
+    &quot;Python.problem2-gpt-analysis.executor&quot;: &quot;Run&quot;,
     &quot;Python.problem4_analysis.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Makoto-problem4-try&quot;,
     &quot;last_opened_file_path&quot;: &quot;F:/opensource/hhh&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -43,6 +59,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="F:\opensource\workenvironment\mathcompetition\National-Mathematical-Modeling-Competition\problem4_analysis" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -72,7 +93,10 @@
       <workItem from="1757195220838" duration="18000" />
       <workItem from="1757195844695" duration="2388000" />
       <workItem from="1757198258228" duration="872000" />
-      <workItem from="1757213614913" duration="309000" />
+      <workItem from="1757213614913" duration="2002000" />
+      <workItem from="1757216015773" duration="615000" />
+      <workItem from="1757216675568" duration="1792000" />
+      <workItem from="1757218521699" duration="1114000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
@@ -87,10 +111,11 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$main_problem2.coverage" NAME="main_problem2 覆盖结果" MODIFIED="1757185065863" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
+    <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$problem2_gpt_analysis.coverage" NAME="problem2-gpt-analysis 覆盖结果" MODIFIED="1757218273519" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem4_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$decision_tree_grouping.coverage" NAME="decision_tree_grouping 覆盖结果" MODIFIED="1757172357502" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$pure_problem2.coverage" NAME="pure_problem2 覆盖结果" MODIFIED="1757174728749" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$simple_problem2.coverage" NAME="simple_problem2 覆盖结果" MODIFIED="1757184751468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2_analysis" />
-    <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$problem4_analysis.coverage" NAME="problem4_analysis 覆盖结果" MODIFIED="1757213707894" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem4_analysis" />
+    <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$problem4_analysis.coverage" NAME="problem4_analysis 覆盖结果" MODIFIED="1757219393740" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem4_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$improved_analysis.coverage" NAME="improved_analysis 覆盖结果" MODIFIED="1757194436758" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem4_analysis" />
     <SUITE FILE_PATH="coverage/National_Mathematical_Modeling_Competition$main_problem3.coverage" NAME="main_problem3 覆盖结果" MODIFIED="1757184595909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem3_analysis" />
   </component>
